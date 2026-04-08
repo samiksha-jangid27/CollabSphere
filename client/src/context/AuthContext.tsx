@@ -1,0 +1,97 @@
+// ABOUTME: Auth state provider — manages user, token, loading, and authentication lifecycle.
+// ABOUTME: Silent refresh on mount; exposes login, logout, sendOtp via context.
+
+"use client";
+
+import { createContext, useCallback, useEffect, useState, ReactNode } from "react";
+import { authService, User } from "@/services/authService";
+import { setAccessToken } from "@/services/api";
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  sendOtp: (phone: string) => Promise<{ isNewUser: boolean }>;
+  login: (phone: string, otp: string) => Promise<void>;
+  sendEmailVerification: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const { data } = await authService.getMe();
+      setUser(data.user);
+    } catch {
+      setUser(null);
+      setAccessToken(null);
+    }
+  }, []);
+
+  // Silent refresh on mount
+  useEffect(() => {
+    async function init() {
+      try {
+        const { data } = await authService.refreshToken();
+        setAccessToken(data.accessToken);
+        await refreshUser();
+      } catch {
+        setUser(null);
+        setAccessToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    init();
+  }, [refreshUser]);
+
+  const sendOtp = useCallback(async (phone: string) => {
+    const response = await authService.sendOtp(phone);
+    return { isNewUser: response.data.isNewUser };
+  }, []);
+
+  const login = useCallback(
+    async (phone: string, otp: string) => {
+      const response = await authService.verifyOtp(phone, otp);
+      setAccessToken(response.data.accessToken);
+      setUser(response.data.user);
+    },
+    []
+  );
+
+  const sendEmailVerification = useCallback(async (email: string) => {
+    await authService.sendEmailVerification(email);
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+      setAccessToken(null);
+    }
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        sendOtp,
+        login,
+        sendEmailVerification,
+        logout,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
