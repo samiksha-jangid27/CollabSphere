@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant Twilio
+    participant DB as MongoDB
+
+    User->>FE: enter phone
+    FE->>BE: POST /otp/send
+    BE->>Twilio: send SMS
+    Twilio-->>BE: OK
+    BE-->>FE: OTP sent
+    User->>FE: enter OTP
+    FE->>BE: POST /otp/verify
+    BE->>DB: find/create user
+    DB-->>BE: user record
+    BE->>BE: generate JWT
+    BE-->>FE: token + user
+    FE->>BE: POST /email/send
+    BE->>User: send email (Nodemailer)
+    BE-->>FE: email sent
+    User->>FE: click link
+    FE->>BE: GET /email/verify/:token
+    BE->>DB: update emailVerified
+    BE-->>FE: verified

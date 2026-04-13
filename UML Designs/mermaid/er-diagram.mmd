@@ -1,0 +1,67 @@
+erDiagram
+    USER ||--|| PROFILE : has
+    USER {
+        string phone
+        string email
+        string role
+        boolean verified
+    }
+    PROFILE ||--o{ SOCIAL_ACCOUNT : links
+    PROFILE ||--o{ MEDIA_POST : owns
+    PROFILE {
+        string name
+        string bio
+        string niche
+        string location
+        boolean verified
+    }
+    SOCIAL_ACCOUNT {
+        string platform
+        string handle
+        boolean isVerified
+        string oauthData
+    }
+    MEDIA_POST {
+        string type
+        string url
+        string caption
+        string tags
+    }
+
+    USER ||--o{ COLLABORATION_REQUEST : sends
+    COLLABORATION_REQUEST {
+        string title
+        string description
+        string status
+        string type
+        string location
+        number budget
+    }
+
+    USER ||--o{ CONVERSATION : participates
+    CONVERSATION ||--o{ MESSAGE : contains
+    CONVERSATION {
+        string participants
+        string collabReqId
+    }
+    MESSAGE {
+        string content
+        string sender
+    }
+
+    USER ||--o{ BOOKMARK : saves
+    BOOKMARK {
+        string profileId
+    }
+
+    USER ||--o{ VERIFICATION_REQUEST : submits
+    VERIFICATION_REQUEST {
+        string status
+        string evidence
+    }
+
+    USER ||--o{ REPORT : files
+    REPORT {
+        string targetType
+        string reason
+    }

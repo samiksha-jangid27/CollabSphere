@@ -16,6 +16,499 @@ A collaboration marketplace for creators, influencers, and brands. Built as a fu
 
 ---
 
+## System Design & UML Diagrams
+
+The complete system design for CollabSphere is captured in the seven UML diagrams below. Source images live in [`UML Designs/`](./UML%20Designs); the Mermaid sources rendered here live in [`UML Designs/mermaid/`](./UML%20Designs/mermaid) and are version-controlled alongside the code, so the design stays in sync with the implementation.
+
+Click any diagram to expand it.
+
+<details>
+<summary><b>1. Use Case Diagram</b> — actors, system boundary, and feature groupings</summary>
+
+Shows the three actors (Creator/Influencer, Brand, Admin/Moderator) and every use case grouped by capability: Onboarding & Profile, Discovery & Search, Interaction & Collaboration, Brand Operations, Moderation, and Internal System Services. Dotted edges mark `<<include>>` relationships to internal services (SMS OTP, email verification, geospatial queries, real-time delivery).
+
+```mermaid
+flowchart LR
+    Creator([Creator / Influencer])
+    Brand([Brand])
+    Admin([Admin / Moderator])
+
+    subgraph System[CollabSphere System]
+        direction TB
+
+        subgraph Onboarding[Onboarding & Profile]
+            UC1((Sign Up with Phone OTP))
+            UC2((Verify Email))
+            UC3((Create Profile))
+            UC4((Edit Profile))
+            UC5((Link Social Accounts))
+            UC6((Submit Verification Request))
+        end
+
+        subgraph Discovery[Discovery & Search]
+            UC7((Search Creators))
+            UC8((Filter Search Results))
+            UC9((View Creator Profiles))
+            UC10((Bookmark Profiles))
+        end
+
+        subgraph Interaction[Interaction & Collaboration]
+            UC11((Send Collaboration Request))
+            UC12((Accept/Reject Request))
+            UC13((Send Messages))
+            UC14((View Messages))
+        end
+
+        subgraph BrandOps[Brand Operations]
+            UC15((Post Collaboration Opportunity))
+            UC16((Browse Applicants))
+            UC17((Manage Campaign Requests))
+        end
+
+        subgraph Admin_[Moderation & Administration]
+            UC18((Moderate Reported Content))
+            UC19((View Platform Statistics))
+            UC20((Ban/Suspend Users))
+            UC21((Review Verification Requests))
+            UC22((Approve/Reject Profiles))
+            UC23((Manage Duplicate Accounts))
+        end
+
+        subgraph Internal[System Services - Internal]
+            UC24((Send OTP via SMS))
+            UC25((Send Email Verification Link))
+            UC26((Validate JWT Tokens))
+            UC27((Execute Geospatial Queries))
+            UC28((Deliver Real-Time Messages))
+        end
+    end
+
+    Creator --- UC1
+    Creator --- UC2
+    Creator --- UC3
+    Creator --- UC4
+    Creator --- UC5
+    Creator --- UC6
+    Creator --- UC7
+    Creator --- UC8
+    Creator --- UC9
+    Creator --- UC10
+    Creator --- UC11
+    Creator --- UC12
+    Creator --- UC13
+    Creator --- UC14
+
+    Brand --- UC7
+    Brand --- UC9
+    Brand --- UC11
+    Brand --- UC13
+    Brand --- UC14
+    Brand --- UC15
+    Brand --- UC16
+    Brand --- UC17
+
+    Admin --- UC18
+    Admin --- UC19
+    Admin --- UC20
+    Admin --- UC21
+    Admin --- UC22
+    Admin --- UC23
+
+    UC1 -. include .-> UC24
+    UC2 -. include .-> UC25
+    UC11 -. include .-> UC28
+    UC13 -. include .-> UC28
+    UC7 -. include .-> UC27
+```
+
+</details>
+
+<details>
+<summary><b>2. Class Diagram</b> — controllers, services, domain models, and OOP relationships</summary>
+
+Captures the layered OOP design: HTTP controllers delegate to services (each defined against an interface for dependency inversion), services operate on domain models, and enumerations pin down allowed states for verification, collaboration requests, and message types.
+
+```mermaid
+classDiagram
+    class UserController {
+        +requestOtp(req, res) Object
+        +verifyOtp(req, res) Object
+        +requestLoginOtp(req, res) Object
+    }
+
+    class UserService {
+        -users: List
+        +registerUser(phone, email) Object
+        +authenticateUser(identifier, otp) Object
+        +deactivateUser(userId) Boolean
+    }
+
+    class AuthService {
+        +generateToken(userId) String
+        +verifyToken(token) Boolean
+        +refreshAccessToken(token) String
+    }
+
+    class CollaborationRequestController {
+        +sendRequest(req, res) Object
+        +respondToRequest(req, res) Object
+        +listRequests(userId, action) Object
+    }
+
+    class ConversationService {
+        -conversations: List
+        +createConversation(participants) Object
+        +addMessage(conversationId, message) Object
+        +listConversations(userId) List
+    }
+
+    class ProfileService {
+        -profiles: List
+        +createProfile(userId, data) Profile
+        +updateProfile(profileId, data) Profile
+        +getProfile(profileId) Profile
+        +verifyProfile(profileId, level) Boolean
+    }
+
+    class VerificationService {
+        -verificationRequests: List
+        +submitVerification(userId, evidence) Object
+        +reviewVerification(requestId, decision) Object
+    }
+
+    class CollaborationService {
+        -requests: List
+        +createRequest(senderId, data) Object
+        +acceptRequest(requestId) Object
+        +rejectRequest(requestId) Object
+        +listByStatus(userId, status) List
+    }
+
+    class User {
+        +id: ObjectId
+        +phone: String
+        +email: String
+        +phoneVerified: Boolean
+        +emailVerified: Boolean
+        +role: String
+        +save() User
+        +deactivate() Boolean
+    }
+
+    class Profile {
+        +id: ObjectId
+        +userId: ObjectId
+        +displayName: String
+        +bio: String
+        +niche: String
+        +location: GeoPoint
+        +updateFields(data) Profile
+        +linkSocial(account) Profile
+        +getCompleteness() Number
+    }
+
+    class VerificationRequest {
+        +userId: ObjectId
+        +status: VerificationStatus
+        +evidence: String
+        +reviewedBy: String
+        +reviewedAt: Date
+    }
+
+    class CollaborationRequest {
+        +id: ObjectId
+        +senderId: ObjectId
+        +receiverId: ObjectId
+        +status: RequestStatus
+        +description: String
+        +budget: Number
+        +location: GeoPoint
+        +respond(decision) CollaborationRequest
+    }
+
+    class Conversation {
+        +id: ObjectId
+        +participants: ObjectId[]
+        +lastMessageAt: Date
+        +addMessage(message) Message
+    }
+
+    class Message {
+        +id: ObjectId
+        +senderId: ObjectId
+        +content: String
+        +type: MessageType
+        +createdAt: Date
+    }
+
+    class MediaPost {
+        +type: String
+        +url: String
+        +caption: String
+        +tags: String[]
+    }
+
+    class SocialAccount {
+        +platform: String
+        +handle: String
+        +verified: Boolean
+        +linkedAt: Date
+    }
+
+    class UserRole {
+        <<enumeration>>
+        CREATOR
+        BRAND
+        ADMIN
+    }
+
+    class VerificationStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        REJECTED
+    }
+
+    class RequestStatus {
+        <<enumeration>>
+        PENDING
+        ACCEPTED
+        REJECTED
+        CLOSED
+    }
+
+    class MessageType {
+        <<enumeration>>
+        TEXT
+        MEDIA
+    }
+
+    UserController --> UserService
+    UserController --> AuthService
+    CollaborationRequestController --> CollaborationService
+    ProfileService --> Profile
+    VerificationService --> VerificationRequest
+    CollaborationService --> CollaborationRequest
+    ConversationService --> Conversation
+    Conversation "1" --> "*" Message
+    User "1" --> "1" Profile
+    User --> UserRole
+    Profile "1" --> "*" MediaPost
+    Profile "1" --> "*" SocialAccount
+    VerificationRequest --> VerificationStatus
+    CollaborationRequest --> RequestStatus
+    Message --> MessageType
+```
+
+</details>
+
+<details>
+<summary><b>3. ER Diagram</b> — entities, cardinalities, and key attributes</summary>
+
+Shows the MongoDB document model. A `User` owns exactly one `Profile`; profiles aggregate social accounts and media posts. Users send collaboration requests, participate in conversations (which contain messages), bookmark other profiles, submit verification requests, and can file reports.
+
+```mermaid
+erDiagram
+    USER ||--|| PROFILE : has
+    USER {
+        string phone
+        string email
+        string role
+        boolean verified
+    }
+    PROFILE ||--o{ SOCIAL_ACCOUNT : links
+    PROFILE ||--o{ MEDIA_POST : owns
+    PROFILE {
+        string name
+        string bio
+        string niche
+        string location
+        boolean verified
+    }
+    SOCIAL_ACCOUNT {
+        string platform
+        string handle
+        boolean isVerified
+        string oauthData
+    }
+    MEDIA_POST {
+        string type
+        string url
+        string caption
+        string tags
+    }
+
+    USER ||--o{ COLLABORATION_REQUEST : sends
+    COLLABORATION_REQUEST {
+        string title
+        string description
+        string status
+        string type
+        string location
+        number budget
+    }
+
+    USER ||--o{ CONVERSATION : participates
+    CONVERSATION ||--o{ MESSAGE : contains
+    CONVERSATION {
+        string participants
+        string collabReqId
+    }
+    MESSAGE {
+        string content
+        string sender
+    }
+
+    USER ||--o{ BOOKMARK : saves
+    BOOKMARK {
+        string profileId
+    }
+
+    USER ||--o{ VERIFICATION_REQUEST : submits
+    VERIFICATION_REQUEST {
+        string status
+        string evidence
+    }
+
+    USER ||--o{ REPORT : files
+    REPORT {
+        string targetType
+        string reason
+    }
+```
+
+</details>
+
+<details>
+<summary><b>4. Sequence Diagram — User Sign-Up & Verification</b></summary>
+
+End-to-end onboarding: phone OTP through Twilio, JWT issuance after OTP verification, and email verification via Nodemailer with a signed token link.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant Twilio
+    participant DB as MongoDB
+
+    User->>FE: enter phone
+    FE->>BE: POST /otp/send
+    BE->>Twilio: send SMS
+    Twilio-->>BE: OK
+    BE-->>FE: OTP sent
+    User->>FE: enter OTP
+    FE->>BE: POST /otp/verify
+    BE->>DB: find/create user
+    DB-->>BE: user record
+    BE->>BE: generate JWT
+    BE-->>FE: token + user
+    FE->>BE: POST /email/send
+    BE->>User: send email (Nodemailer)
+    BE-->>FE: email sent
+    User->>FE: click link
+    FE->>BE: GET /email/verify/:token
+    BE->>DB: update emailVerified
+    BE-->>FE: verified
+```
+
+</details>
+
+<details>
+<summary><b>5. Sequence Diagram — Location-Based Search</b></summary>
+
+Discovery flow built on MongoDB's `$near` operator against a `2dsphere` index on `Profile.location`, with post-query niche/platform filtering and pagination.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as MongoDB
+
+    User->>FE: set filters
+    User->>FE: set location
+    FE->>BE: GET /search/nearby?lat&lng&radius
+    BE->>DB: $near query (2dsphere)
+    DB-->>BE: matching profiles
+    BE->>BE: apply niche/platform filters
+    BE->>BE: paginate results
+    BE-->>FE: profiles[]
+    FE-->>User: render cards
+```
+
+</details>
+
+<details>
+<summary><b>6. Sequence Diagram — Collaboration Request Flow</b></summary>
+
+Demonstrates the Observer pattern in action: on request creation the backend emits a `collab.created` event, a Socket.io observer notifies the receiver in real time, and on acceptance a conversation is auto-created for the two parties.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Sender
+    participant SFE as Frontend (Sender)
+    participant BE as Backend
+    participant DB as MongoDB
+    actor Receiver
+    participant RFE as Frontend (Receiver)
+
+    Sender->>SFE: create collab
+    SFE->>BE: POST /collaborations
+    BE->>BE: validate sender
+    BE->>DB: create record
+    DB-->>BE: request record
+    BE->>BE: emit(collab.created) [Observer]
+    BE->>Receiver: notify receiver (Socket)
+    BE-->>SFE: 201 Created
+
+    Note over Receiver,RFE: Receiver views request
+
+    Receiver->>RFE: open request
+    RFE->>BE: PATCH /collaborations/:id/status
+    BE->>DB: update status = "accepted"
+    BE->>BE: emit(collab.accepted)
+    BE->>DB: create conversation
+    BE-->>RFE: 200 OK
+```
+
+</details>
+
+<details>
+<summary><b>7. Sequence Diagram — Social Account Linking (OAuth)</b></summary>
+
+OAuth 2.0 authorization-code flow for linking third-party social accounts (e.g. Instagram). The backend exchanges the code for an access token, verifies the returned handle matches the claimed profile, and marks the account verified.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant OAuth as OAuth Provider
+    participant DB as MongoDB
+
+    User->>FE: click link
+    FE->>BE: POST /socials/oauth/instagram
+    BE-->>FE: redirect URL
+    FE-->>User: redirect
+    User->>OAuth: authorize
+    OAuth->>BE: callback + code
+    BE->>OAuth: exchange code for token
+    OAuth-->>BE: access token + userId
+    BE->>BE: verify handle matches
+    BE->>DB: save SocialAccount
+    BE->>DB: set isVerified = true
+    BE-->>FE: social linked
+```
+
+</details>
+
+---
+
 ## Prerequisites
 
 Before you start, make sure you have:

@@ -1,0 +1,91 @@
+flowchart LR
+    Creator([Creator / Influencer])
+    Brand([Brand])
+    Admin([Admin / Moderator])
+
+    subgraph System[CollabSphere System]
+        direction TB
+
+        subgraph Onboarding[Onboarding & Profile]
+            UC1((Sign Up with Phone OTP))
+            UC2((Verify Email))
+            UC3((Create Profile))
+            UC4((Edit Profile))
+            UC5((Link Social Accounts))
+            UC6((Submit Verification Request))
+        end
+
+        subgraph Discovery[Discovery & Search]
+            UC7((Search Creators))
+            UC8((Filter Search Results))
+            UC9((View Creator Profiles))
+            UC10((Bookmark Profiles))
+        end
+
+        subgraph Interaction[Interaction & Collaboration]
+            UC11((Send Collaboration Request))
+            UC12((Accept/Reject Request))
+            UC13((Send Messages))
+            UC14((View Messages))
+        end
+
+        subgraph BrandOps[Brand Operations]
+            UC15((Post Collaboration Opportunity))
+            UC16((Browse Applicants))
+            UC17((Manage Campaign Requests))
+        end
+
+        subgraph Admin_[Moderation & Administration]
+            UC18((Moderate Reported Content))
+            UC19((View Platform Statistics))
+            UC20((Ban/Suspend Users))
+            UC21((Review Verification Requests))
+            UC22((Approve/Reject Profiles))
+            UC23((Manage Duplicate Accounts))
+        end
+
+        subgraph Internal[System Services - Internal]
+            UC24((Send OTP via SMS))
+            UC25((Send Email Verification Link))
+            UC26((Validate JWT Tokens))
+            UC27((Execute Geospatial Queries))
+            UC28((Deliver Real-Time Messages))
+        end
+    end
+
+    Creator --- UC1
+    Creator --- UC2
+    Creator --- UC3
+    Creator --- UC4
+    Creator --- UC5
+    Creator --- UC6
+    Creator --- UC7
+    Creator --- UC8
+    Creator --- UC9
+    Creator --- UC10
+    Creator --- UC11
+    Creator --- UC12
+    Creator --- UC13
+    Creator --- UC14
+
+    Brand --- UC7
+    Brand --- UC9
+    Brand --- UC11
+    Brand --- UC13
+    Brand --- UC14
+    Brand --- UC15
+    Brand --- UC16
+    Brand --- UC17
+
+    Admin --- UC18
+    Admin --- UC19
+    Admin --- UC20
+    Admin --- UC21
+    Admin --- UC22
+    Admin --- UC23
+
+    UC1 -. include .-> UC24
+    UC2 -. include .-> UC25
+    UC11 -. include .-> UC28
+    UC13 -. include .-> UC28
+    UC7 -. include .-> UC27

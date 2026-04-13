@@ -1,0 +1,169 @@
+classDiagram
+    class UserController {
+        +requestOtp(req, res) Object
+        +verifyOtp(req, res) Object
+        +requestLoginOtp(req, res) Object
+    }
+
+    class UserService {
+        -users: List
+        +registerUser(phone, email) Object
+        +authenticateUser(identifier, otp) Object
+        +deactivateUser(userId) Boolean
+    }
+
+    class AuthService {
+        +generateToken(userId) String
+        +verifyToken(token) Boolean
+        +refreshAccessToken(token) String
+    }
+
+    class CollaborationRequestController {
+        +sendRequest(req, res) Object
+        +respondToRequest(req, res) Object
+        +listRequests(userId, action) Object
+    }
+
+    class ConversationService {
+        -conversations: List
+        +createConversation(participants) Object
+        +addMessage(conversationId, message) Object
+        +listConversations(userId) List
+    }
+
+    class ProfileService {
+        -profiles: List
+        +createProfile(userId, data) Profile
+        +updateProfile(profileId, data) Profile
+        +getProfile(profileId) Profile
+        +verifyProfile(profileId, level) Boolean
+    }
+
+    class VerificationService {
+        -verificationRequests: List
+        +submitVerification(userId, evidence) Object
+        +reviewVerification(requestId, decision) Object
+    }
+
+    class CollaborationService {
+        -requests: List
+        +createRequest(senderId, data) Object
+        +acceptRequest(requestId) Object
+        +rejectRequest(requestId) Object
+        +listByStatus(userId, status) List
+    }
+
+    class User {
+        +id: ObjectId
+        +phone: String
+        +email: String
+        +phoneVerified: Boolean
+        +emailVerified: Boolean
+        +role: String
+        +save() User
+        +deactivate() Boolean
+    }
+
+    class Profile {
+        +id: ObjectId
+        +userId: ObjectId
+        +displayName: String
+        +bio: String
+        +niche: String
+        +location: GeoPoint
+        +updateFields(data) Profile
+        +linkSocial(account) Profile
+        +getCompleteness() Number
+    }
+
+    class VerificationRequest {
+        +userId: ObjectId
+        +status: VerificationStatus
+        +evidence: String
+        +reviewedBy: String
+        +reviewedAt: Date
+    }
+
+    class UserRole {
+        <<enumeration>>
+        CREATOR
+        BRAND
+        ADMIN
+    }
+
+    class CollaborationRequest {
+        +id: ObjectId
+        +senderId: ObjectId
+        +receiverId: ObjectId
+        +status: RequestStatus
+        +description: String
+        +budget: Number
+        +location: GeoPoint
+        +respond(decision) CollaborationRequest
+    }
+
+    class Conversation {
+        +id: ObjectId
+        +participants: ObjectId[]
+        +lastMessageAt: Date
+        +addMessage(message) Message
+    }
+
+    class Message {
+        +id: ObjectId
+        +senderId: ObjectId
+        +content: String
+        +type: MessageType
+        +createdAt: Date
+    }
+
+    class MediaPost {
+        +type: String
+        +url: String
+        +caption: String
+        +tags: String[]
+    }
+
+    class SocialAccount {
+        +platform: String
+        +handle: String
+        +verified: Boolean
+        +linkedAt: Date
+    }
+
+    class VerificationStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        REJECTED
+    }
+
+    class RequestStatus {
+        <<enumeration>>
+        PENDING
+        ACCEPTED
+        REJECTED
+        CLOSED
+    }
+
+    class MessageType {
+        <<enumeration>>
+        TEXT
+        MEDIA
+    }
+
+    UserController --> UserService
+    UserController --> AuthService
+    CollaborationRequestController --> CollaborationService
+    ProfileService --> Profile
+    VerificationService --> VerificationRequest
+    CollaborationService --> CollaborationRequest
+    ConversationService --> Conversation
+    Conversation "1" --> "*" Message
+    User "1" --> "1" Profile
+    User --> UserRole
+    Profile "1" --> "*" MediaPost
+    Profile "1" --> "*" SocialAccount
+    VerificationRequest --> VerificationStatus
+    CollaborationRequest --> RequestStatus
+    Message --> MessageType

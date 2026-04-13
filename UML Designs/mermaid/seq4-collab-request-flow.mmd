@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor Sender
+    participant SFE as Frontend (Sender)
+    participant BE as Backend
+    participant DB as MongoDB
+    actor Receiver
+    participant RFE as Frontend (Receiver)
+
+    Sender->>SFE: create collab
+    SFE->>BE: POST /collaborations
+    BE->>BE: validate sender
+    BE->>DB: create record
+    DB-->>BE: request record
+    BE->>BE: emit(collab.created) [Observer]
+    BE->>Receiver: notify receiver (Socket)
+    BE-->>SFE: 201 Created
+
+    Note over Receiver,RFE: Receiver views request
+
+    Receiver->>RFE: open request
+    RFE->>BE: PATCH /collaborations/:id/status
+    BE->>DB: update status = "accepted"
+    BE->>BE: emit(collab.accepted)
+    BE->>DB: create conversation
+    BE-->>RFE: 200 OK

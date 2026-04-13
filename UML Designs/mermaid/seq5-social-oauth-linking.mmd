@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant OAuth as OAuth Provider
+    participant DB as MongoDB
+
+    User->>FE: click link
+    FE->>BE: POST /socials/oauth/instagram
+    BE-->>FE: redirect URL
+    FE-->>User: redirect
+    User->>OAuth: authorize
+    OAuth->>BE: callback + code
+    BE->>OAuth: exchange code for token
+    OAuth-->>BE: access token + userId
+    BE->>BE: verify handle matches
+    BE->>DB: save SocialAccount
+    BE->>DB: set isVerified = true
+    BE-->>FE: social linked

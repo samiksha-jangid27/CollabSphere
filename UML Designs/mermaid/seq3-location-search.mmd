@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as MongoDB
+
+    User->>FE: set filters
+    User->>FE: set location
+    FE->>BE: GET /search/nearby?lat&lng&radius
+    BE->>DB: $near query (2dsphere)
+    DB-->>BE: matching profiles
+    BE->>BE: apply niche/platform filters
+    BE->>BE: paginate results
+    BE-->>FE: profiles[]
+    FE-->>User: render cards
