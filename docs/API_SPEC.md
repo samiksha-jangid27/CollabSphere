@@ -303,6 +303,54 @@ Authorization: Bearer <accessToken>
 
 ---
 
+## 8. GET `/geocode`
+
+Search for places via the Nominatim (OpenStreetMap) proxy. Powers the location autocomplete on the profile edit form.
+
+**Auth:** Bearer token required
+**Rate Limit:** 30 requests / minute per client
+
+### Headers
+```
+Authorization: Bearer <accessToken>
+```
+
+### Query Parameters
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| q | string | Yes | 2 to 120 characters |
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "displayName": "Mumbai, Maharashtra, India",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "country": "India",
+        "lat": 19.076,
+        "lng": 72.8777
+      }
+    ]
+  },
+  "message": "Geocode results"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `VALIDATION_ERROR` | `q` missing or fewer than 2 characters |
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 429 | `TOO_MANY_REQUESTS` | Rate limit exceeded (30 per minute) |
+| 502 | `GEOCODE_UPSTREAM_ERROR` | Nominatim unavailable or returned a non 2xx response |
+
+---
+
 ## Error Code Reference
 
 | Code | HTTP Status | Description |
@@ -319,6 +367,7 @@ Authorization: Bearer <accessToken>
 | `ACCOUNT_LOCKED` | 403 | Account locked due to OTP failures |
 | `USER_NOT_FOUND` | 404 | User doesn't exist |
 | `TOO_MANY_REQUESTS` | 429 | General rate limit exceeded |
+| `GEOCODE_UPSTREAM_ERROR` | 502 | Nominatim geocode service unavailable |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 
 ---
