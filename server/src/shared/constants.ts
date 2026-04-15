@@ -1,5 +1,5 @@
 // ABOUTME: Application-wide constants for OTP config, rate limits, API versioning, and token types.
-// ABOUTME: Single source of truth for magic numbers — no hardcoded values elsewhere.
+// ABOUTME: Single source of truth for magic numbers (OTP, rate limits, profile, uploads) — no hardcoded values elsewhere.
 
 export const API_PREFIX = '/api/v1';
 
