@@ -15,6 +15,7 @@ type NavItem = {
   href: string;
   match: (pathname: string) => boolean;
   active: boolean;
+  soon?: boolean;
 };
 
 const NAV_ITEMS: ReadonlyArray<Omit<NavItem, "active">> = [
@@ -27,16 +28,19 @@ const NAV_ITEMS: ReadonlyArray<Omit<NavItem, "active">> = [
     label: "Discover",
     href: "#",
     match: () => false,
+    soon: true,
   },
   {
     label: "Collaborate",
     href: "#",
     match: () => false,
+    soon: true,
   },
   {
     label: "Messages",
     href: "#",
     match: () => false,
+    soon: true,
   },
 ];
 
@@ -115,26 +119,33 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </Link>
 
           <nav aria-label="Primary" className="flex items-center gap-5 sm:gap-8">
-            {items.map((item, idx) => {
+            {items.map((item) => {
               const isProfile = item.label === "Profile";
               const visibilityClass = isProfile ? "" : "hidden sm:inline-flex";
-              const baseColor = item.active ? "text-paper" : "text-paper-dim";
+
+              if (item.soon) {
+                return (
+                  <span
+                    key={item.label}
+                    className={`type-eyebrow relative inline-flex items-center gap-2 text-paper-muted select-none ${visibilityClass}`}
+                    title="Coming soon"
+                    style={{ cursor: "default", opacity: 0.45 }}
+                    aria-disabled="true"
+                  >
+                    {item.label}
+                  </span>
+                );
+              }
+
               return (
                 <Link
                   key={item.label}
                   href={item.href}
                   aria-current={item.active ? "page" : undefined}
-                  className={`type-eyebrow relative inline-flex items-center gap-2 ${baseColor} hover:text-paper ${visibilityClass}`}
+                  className={`type-eyebrow relative inline-flex items-center gap-2 ${item.active ? "text-paper" : "text-paper-dim"} hover:text-paper ${visibilityClass}`}
                   style={{ transition: "color 150ms linear" }}
                 >
-                  <span
-                    aria-hidden
-                    className="type-mono text-paper-muted hidden md:inline"
-                    style={{ fontSize: "10px", letterSpacing: "0.08em" }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span>{item.label}</span>
+                  {item.label}
                   {item.active && (
                     <span
                       aria-hidden

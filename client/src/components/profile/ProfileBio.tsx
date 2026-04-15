@@ -21,13 +21,12 @@ export function ProfileBio({ profile }: ProfileBioProps) {
 
   return (
     <motion.section variants={fadeUp} className="w-full">
-      <div className="type-eyebrow text-paper-dim">
-        <span className="text-paper-muted">02 /</span>{" "}
-        <span className="text-paper">bio</span>
+      <div className="type-eyebrow text-paper-muted uppercase" style={{ letterSpacing: "0.1em", fontSize: 11 }}>
+        Bio
       </div>
 
       <p
-        className={`mt-8 type-body-l ${
+        className={`mt-5 type-body-l ${
           bio ? "text-paper" : "text-paper-muted"
         }`}
         style={{ maxWidth: "64ch" }}
@@ -36,13 +35,12 @@ export function ProfileBio({ profile }: ProfileBioProps) {
       </p>
 
       {showTagBlock && (
-        <div className="mt-16">
-          <div className="type-eyebrow text-paper-dim">
-            <span className="text-paper-muted">03 /</span>{" "}
-            <span className="text-paper">niche</span>
+        <div className="mt-10">
+          <div className="type-eyebrow text-paper-muted uppercase" style={{ letterSpacing: "0.1em", fontSize: 11 }}>
+            Niche
           </div>
 
-          <ul className="mt-8 flex flex-wrap gap-3" role="list">
+          <ul className="mt-5 flex flex-wrap gap-3" role="list">
             {tags.map((tag) => (
               <li key={tag}>
                 <span

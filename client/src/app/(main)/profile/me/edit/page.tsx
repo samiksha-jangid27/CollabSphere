@@ -1,11 +1,13 @@
-// ABOUTME: Editorial Noir profile edit page wiring useProfile to the controlled ProfileEditForm.
-// ABOUTME: Branches create vs update copy, refetches profile after avatar uploads to resync state.
+// ABOUTME: Profile edit page — sidebar (avatar upload + live name preview) next to form fields.
+// ABOUTME: Back navigation at top, create vs update modes, two-column on desktop.
 
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 
 export default function EditProfilePage() {
@@ -18,13 +20,12 @@ export default function EditProfilePage() {
   if (error) {
     return (
       <div className="max-w-[64ch]">
-        <div className="type-eyebrow text-paper-muted">
-          <span>00 /</span> <span className="text-rust">error</span>
-        </div>
-        <p className="mt-8 type-body-l text-paper">{error}</p>
+        <p className="type-body-l text-paper">{error}</p>
       </div>
     );
   }
+
+  const isUpdate = hasProfile && Boolean(profile);
 
   return (
     <motion.div
@@ -32,33 +33,71 @@ export default function EditProfilePage() {
       initial="hidden"
       animate="show"
       className="w-full"
-      style={{ maxWidth: 560 }}
     >
-      <motion.div
-        variants={fadeUp}
-        className="type-eyebrow text-paper-dim"
-      >
-        <span className="text-paper-muted">01 /</span>{" "}
-        <span className="text-paper">{hasProfile ? "edit" : "create"}</span>
+      {/* Back navigation */}
+      <motion.div variants={fadeUp}>
+        <Link
+          href="/profile/me"
+          className="type-eyebrow text-paper-muted inline-flex items-center gap-2 hover:text-paper"
+          style={{ transition: "color 150ms linear" }}
+        >
+          <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>←</span>
+          <span>Profile</span>
+        </Link>
       </motion.div>
 
-      <motion.h1
-        variants={fadeUp}
-        className="type-display-l text-paper mt-12"
-        style={{ textWrap: "balance" }}
-      >
-        {hasProfile ? "Edit profile." : "Create profile."}
-      </motion.h1>
+      {/* Page heading */}
+      <motion.div variants={fadeUp} className="mt-8">
+        <h1
+          className="font-display text-paper leading-tight"
+          style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 600 }}
+        >
+          {isUpdate ? "Edit profile." : "Create profile."}
+        </h1>
+        <hr className="rule-line mt-6" style={{ width: 80 }} />
+      </motion.div>
 
-      <motion.hr
-        variants={fadeUp}
-        className="rule-line mt-12"
-        style={{ width: 128 }}
-      />
+      {/* Two-column layout */}
+      <div className="mt-12 flex flex-col gap-12 lg:flex-row lg:gap-16 lg:items-start">
 
-      <div style={{ height: 64 }} />
+        {/* Left sidebar — avatar + hints */}
+        {isUpdate && profile && (
+          <motion.aside
+            variants={fadeUp}
+            className="lg:w-56 lg:shrink-0 lg:sticky lg:top-28"
+          >
+            <AvatarUpload
+              currentUrl={profile.avatar}
+              onUploaded={refetch}
+            />
 
-      <ProfileEditForm initial={profile} onAvatarUploaded={refetch} />
+            <hr className="rule-line mt-8" />
+
+            <div className="mt-6 space-y-3">
+              <p className="type-body-s text-paper-muted">
+                Your display name and bio appear on your public profile.
+              </p>
+              <p className="type-body-s text-paper-muted">
+                Pick up to 5 niches that best describe your content.
+              </p>
+            </div>
+          </motion.aside>
+        )}
+
+        {/* Right — form fields */}
+        <motion.div
+          variants={fadeUp}
+          className="flex-1 min-w-0"
+          style={{ maxWidth: 520 }}
+        >
+          <ProfileEditForm
+            initial={profile}
+            onAvatarUploaded={refetch}
+            hideAvatar
+          />
+        </motion.div>
+
+      </div>
     </motion.div>
   );
 }

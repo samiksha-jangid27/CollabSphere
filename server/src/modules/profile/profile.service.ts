@@ -42,7 +42,9 @@ export class ProfileService implements IProfileService {
 
   async updateProfile(userId: string, input: UpdateProfileInput): Promise<IProfile> {
     const profile = await this.getProfileByUserId(userId);
-    Object.assign(profile, input);
+    for (const [key, value] of Object.entries(input)) {
+      profile.set(key, value);
+    }
     profile.profileCompleteness = this.calculateCompleteness(profile);
     await profile.save();
     return profile;
@@ -73,14 +75,10 @@ export class ProfileService implements IProfileService {
 
   calculateCompleteness(profile: IProfile): number {
     const checks: Array<[boolean, number]> = [
-      [!!profile.displayName, 10],
-      [!!profile.bio && profile.bio.length >= 20, 15],
-      [!!profile.avatar, 15],
-      [!!profile.coverImage, 10],
-      [profile.niche.length > 0, 15],
-      [profile.interests.length > 0, 10],
-      [!!profile.location?.coordinates, 15],
-      [profile.contentTypes.length > 0, 10],
+      [!!profile.displayName, 25],
+      [!!profile.bio && profile.bio.length >= 20, 25],
+      [!!profile.avatar, 25],
+      [profile.niche.length > 0, 25],
     ];
     return checks.reduce((sum, [met, pts]) => sum + (met ? pts : 0), 0);
   }
