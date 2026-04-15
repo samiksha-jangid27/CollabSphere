@@ -44,20 +44,30 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     country: string;
     coords: [number, number] | null;
   }) {
-    const allEmpty =
-      !next.city.trim() &&
-      !next.state.trim() &&
-      !next.country.trim() &&
-      !next.coords;
+    if (!next.coords) {
+      onChange(undefined);
+      return;
+    }
 
-    if (allEmpty) {
+    const [lng, lat] = next.coords;
+    const coordsValid =
+      typeof lng === "number" &&
+      typeof lat === "number" &&
+      Number.isFinite(lng) &&
+      Number.isFinite(lat) &&
+      lng >= -180 &&
+      lng <= 180 &&
+      lat >= -90 &&
+      lat <= 90;
+
+    if (!coordsValid) {
       onChange(undefined);
       return;
     }
 
     const geo: GeoLocation = {
       type: "Point",
-      coordinates: next.coords ?? [0, 0],
+      coordinates: [lng, lat],
       city: next.city.trim() || undefined,
       state: next.state.trim() || undefined,
       country: next.country.trim() || undefined,
@@ -110,7 +120,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         onChange={setCoordsInput}
         onBlur={handleCoordsBlur}
         placeholder="19.076, 72.877"
-        hint="lat, lng"
+        hint="lat, lng, required for location"
       />
     </div>
   );
