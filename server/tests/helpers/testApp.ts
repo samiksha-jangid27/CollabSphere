@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from '@/middleware/errorHandler';
 import authRoutes from '@/modules/auth/auth.routes';
+import profileRoutes from '@/modules/profile/profile.routes';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/profiles', profileRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
