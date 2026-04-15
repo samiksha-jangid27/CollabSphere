@@ -37,3 +37,21 @@ export const HTTP_STATUS = {
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
+
+export const PROFILE_CONFIG = {
+  MAX_BIO_LENGTH: 500,
+  MAX_NICHE_COUNT: 5,
+  MAX_INTERESTS_COUNT: 10,
+  ALLOWED_NICHES: [
+    'fashion', 'beauty', 'travel', 'food', 'fitness', 'gaming',
+    'tech', 'finance', 'education', 'lifestyle', 'music', 'art',
+    'photography', 'comedy', 'parenting', 'sports', 'business',
+  ] as const,
+  ALLOWED_PLATFORMS: ['instagram', 'youtube', 'twitter', 'tiktok', 'linkedin'] as const,
+  COLLAB_TYPES: ['paid', 'barter', 'shoutout', 'content', 'event'] as const,
+} as const;
+
+export const UPLOAD_CONFIG = {
+  MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
+  ALLOWED_IMAGE_MIME: ['image/jpeg', 'image/png', 'image/webp'],
+} as const;
