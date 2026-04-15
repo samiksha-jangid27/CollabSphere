@@ -27,10 +27,7 @@ export class ProfileService implements IProfileService {
   async getProfileByUserId(userId: string): Promise<IProfile> {
     const profile = await this.repo.findByUserId(userId);
     if (!profile) {
-      throw AppError.notFound(
-        `Profile not found (${ERROR_CODES.PROFILE_NOT_FOUND})`,
-        ERROR_CODES.PROFILE_NOT_FOUND,
-      );
+      throw AppError.notFound('Profile not found', ERROR_CODES.PROFILE_NOT_FOUND);
     }
     return profile;
   }
@@ -38,10 +35,7 @@ export class ProfileService implements IProfileService {
   async getProfileById(id: string): Promise<IProfile> {
     const profile = await this.repo.findById(id);
     if (!profile) {
-      throw AppError.notFound(
-        `Profile not found (${ERROR_CODES.PROFILE_NOT_FOUND})`,
-        ERROR_CODES.PROFILE_NOT_FOUND,
-      );
+      throw AppError.notFound('Profile not found', ERROR_CODES.PROFILE_NOT_FOUND);
     }
     return profile;
   }

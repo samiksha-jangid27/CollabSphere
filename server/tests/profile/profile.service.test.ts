@@ -49,11 +49,11 @@ describe('ProfileService', () => {
     ).rejects.toThrow(AppError);
   });
 
-  it('getProfileByUserId throws when not found', async () => {
+  it('getProfileByUserId throws AppError with PROFILE_NOT_FOUND code', async () => {
     const user = await makeUser();
-    await expect(service.getProfileByUserId(user._id.toString())).rejects.toThrow(
-      /PROFILE_NOT_FOUND/,
-    );
+    await expect(service.getProfileByUserId(user._id.toString())).rejects.toMatchObject({
+      code: 'PROFILE_NOT_FOUND',
+    });
   });
 
   it('updateProfile merges fields and recalculates completeness', async () => {
