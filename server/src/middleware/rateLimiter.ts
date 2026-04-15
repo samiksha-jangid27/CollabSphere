@@ -21,3 +21,4 @@ export function createRateLimiter(windowMs: number, max: number) {
 
 export const apiLimiter = createRateLimiter(15 * 60 * 1000, 100);
 export const authLimiter = createRateLimiter(15 * 60 * 1000, 10);
+export const geocodeLimiter = createRateLimiter(60 * 1000, 30);
