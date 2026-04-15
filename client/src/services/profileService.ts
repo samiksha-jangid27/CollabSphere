@@ -37,7 +37,7 @@ export const profileService = {
     const formData = new FormData();
     formData.append('image', file);
     const { data } = await api.post('/profiles/me/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     return data.data.avatar;
   },
@@ -46,7 +46,7 @@ export const profileService = {
     const formData = new FormData();
     formData.append('image', file);
     const { data } = await api.post('/profiles/me/cover', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     return data.data.coverImage;
   },
