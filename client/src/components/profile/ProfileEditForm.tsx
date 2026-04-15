@@ -10,10 +10,12 @@ import { fadeUp, staggerContainer } from "@/lib/motion";
 import { profileService } from "@/services/profileService";
 import type {
   CreateProfileInput,
+  GeoLocation,
   Profile,
 } from "@/types/profile";
 import { NicheSelector } from "./NicheSelector";
 import { AvatarUpload } from "./AvatarUpload";
+import { LocationSearch } from "./LocationSearch";
 
 const BIO_MAX = 500;
 
@@ -30,6 +32,9 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
   const [displayName, setDisplayName] = useState(initial?.displayName ?? "");
   const [bio, setBio] = useState(initial?.bio ?? "");
   const [niche, setNiche] = useState<string[]>(initial?.niche ?? []);
+  const [location, setLocation] = useState<GeoLocation | undefined>(
+    initial?.location
+  );
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
     initial?.avatar
   );
@@ -50,6 +55,7 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
       displayName: displayName.trim(),
       bio: bio.trim() || undefined,
       niche,
+      location,
     };
 
     if (!payload.displayName) {
@@ -149,6 +155,15 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
           <NicheSelector value={niche} onChange={setNiche} />
         </div>
       </motion.div>
+
+      <motion.div variants={fadeUp} className="mb-12">
+          <span className="type-label text-paper-dim block uppercase">
+            Location
+          </span>
+          <div className="mt-4">
+            <LocationSearch value={location} onChange={setLocation} />
+          </div>
+        </motion.div>
 
       <motion.hr variants={fadeUp} className="rule-line my-12" />
 
