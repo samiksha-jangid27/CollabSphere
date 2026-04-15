@@ -32,6 +32,7 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().default(''),
   CLOUDINARY_API_SECRET: z.string().default(''),
 
+  GEOCODE_USER_AGENT: z.string().default('CollabSphere/1.0 (dev@collabsphere.local)'),
   CLIENT_URL: z.string().default('http://localhost:3000'),
 });
 
