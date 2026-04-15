@@ -10,12 +10,22 @@ import { useProfile } from "@/hooks/useProfile";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { CompletenessIndicator } from "@/components/profile/CompletenessIndicator";
 import { ProfileBio } from "@/components/profile/ProfileBio";
+import type { Profile } from "@/types/profile";
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0]![0]!.toUpperCase();
   return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+}
+
+function formatLocation(profile: Profile): string | null {
+  const loc = profile.location;
+  if (!loc) return null;
+  const parts = [loc.city, loc.state, loc.country]
+    .filter((p): p is string => Boolean(p && p.trim()))
+    .map((p) => p.toLowerCase());
+  return parts.length > 0 ? parts.join(", ") : null;
 }
 
 export default function ProfileMePage() {
@@ -41,6 +51,7 @@ export default function ProfileMePage() {
   }
 
   const initials = initialsOf(profile.displayName);
+  const location = formatLocation(profile);
 
   return (
     <motion.div
@@ -102,6 +113,11 @@ export default function ProfileMePage() {
               {profile.displayName}
             </h1>
             <div className="mt-2 type-eyebrow text-paper-muted">creator</div>
+            {location && (
+              <div className="mt-3 type-body-s text-paper-dim lowercase">
+                {location}
+              </div>
+            )}
             {profile.isVerified && (
               <div className="mt-3 flex items-center justify-center lg:justify-start gap-2">
                 <span
