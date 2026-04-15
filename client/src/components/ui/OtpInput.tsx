@@ -46,7 +46,7 @@ export function OtpInput({ value, onChange, length = 6, error }: OtpInputProps) 
 
   return (
     <div>
-      <div className="flex gap-2 justify-center">
+      <div className="flex items-center justify-center gap-3">
         {digits.map((digit, index) => (
           <input
             key={index}
@@ -58,13 +58,18 @@ export function OtpInput({ value, onChange, length = 6, error }: OtpInputProps) 
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
-            className={`w-12 h-14 text-center text-lg font-semibold bg-surface border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors ${
-              error ? "border-error" : ""
+            aria-label={`OTP digit ${index + 1}`}
+            className={`h-14 w-12 rounded-lg border text-center text-lg font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-0 ${
+              error
+                ? "border-rust bg-ink-1 text-paper"
+                : digit
+                  ? "border-amber bg-ink-2 text-paper"
+                  : "border-line bg-ink-1 text-paper"
             }`}
           />
         ))}
       </div>
-      {error && <p className="mt-2 text-sm text-error text-center">{error}</p>}
+      {error && <p className="mt-2 text-center type-body-s text-rust">{error}</p>}
     </div>
   );
 }

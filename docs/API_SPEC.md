@@ -301,11 +301,293 @@ Authorization: Bearer <accessToken>
 | 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
 | 404 | `USER_NOT_FOUND` | User was deleted since token was issued |
 
+
 ---
 
-## 8. GET `/geocode`
+# Sprint 2 — Profile System
 
-Search for places via the Nominatim (OpenStreetMap) proxy. Powers the location autocomplete on the profile edit form.
+## 8. POST `/profiles`
+
+Create a profile for the authenticated user. One profile per user is enforced.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+
+### Request
+```json
+{
+  "displayName": "Aarav Sharma",
+  "bio": "Travel photographer and adventure vlogger",
+  "niche": ["travel", "photography"],
+  "interests": ["hiking", "camping"],
+  "contentTypes": ["reels", "stories"],
+  "collaborationPreferences": {
+    "types": ["paid", "barter"],
+    "openToCollab": true,
+    "preferredPlatforms": ["instagram", "youtube"]
+  },
+  "contactInfo": {
+    "email": "aarav@example.com",
+    "website": "https://aarav.com",
+    "visibility": "public"
+  },
+  "location": {
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "country": "India",
+    "coordinates": [72.8777, 19.076]
+  }
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| displayName | string | Yes | Max 60 characters |
+| bio | string | No | Max 500 characters |
+| niche | array | No | Array of niche strings |
+| interests | array | No | Array of interest strings |
+| contentTypes | array | No | Array of content type strings |
+| collaborationPreferences | object | No | Collab configuration |
+| contactInfo | object | No | Contact visibility settings |
+| location | object | No | GeoJSON Point with city/state/country |
+
+### Response — 201 Created
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "_id": "664b2c3d4e5f6a7b8c9d0e1f",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0e",
+      "displayName": "Aarav Sharma",
+      "bio": "Travel photographer and adventure vlogger",
+      "avatar": null,
+      "coverImage": null,
+      "niche": ["travel", "photography"],
+      "interests": ["hiking", "camping"],
+      "contentTypes": ["reels", "stories"],
+      "collaborationPreferences": {
+        "types": ["paid", "barter"],
+        "openToCollab": true,
+        "preferredPlatforms": ["instagram", "youtube"]
+      },
+      "contactInfo": {
+        "email": "aarav@example.com",
+        "website": "https://aarav.com",
+        "visibility": "public"
+      },
+      "location": {
+        "type": "Point",
+        "coordinates": [72.8777, 19.076],
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "country": "India"
+      },
+      "isVerified": false,
+      "followerCount": 0,
+      "profileCompleteness": 45,
+      "createdAt": "2026-04-15T10:30:00.000Z",
+      "updatedAt": "2026-04-15T10:30:00.000Z"
+    }
+  },
+  "message": "Profile created successfully"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `VALIDATION_ERROR` | Required fields missing or invalid format |
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 409 | `PROFILE_ALREADY_EXISTS` | User already has a profile |
+
+---
+
+## 9. GET `/profiles/me`
+
+Get the authenticated user's profile.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "_id": "664b2c3d4e5f6a7b8c9d0e1f",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0e",
+      "displayName": "Aarav Sharma",
+      "bio": "Travel photographer and adventure vlogger",
+      "avatar": "https://res.cloudinary.com/...",
+      "coverImage": "https://res.cloudinary.com/...",
+      "niche": ["travel", "photography"],
+      "interests": ["hiking", "camping"],
+      "contentTypes": ["reels", "stories"],
+      "collaborationPreferences": { },
+      "contactInfo": { },
+      "location": { },
+      "isVerified": false,
+      "followerCount": 0,
+      "profileCompleteness": 75,
+      "createdAt": "2026-04-15T10:30:00.000Z",
+      "updatedAt": "2026-04-15T10:35:00.000Z"
+    }
+  },
+  "message": "Profile retrieved"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | User has not created a profile yet |
+
+---
+
+## 10. PATCH `/profiles/me`
+
+Update the authenticated user's profile.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+
+### Request
+Same structure as POST `/profiles`, all fields optional.
+
+### Response — 200 OK
+Returns updated profile object (same shape as GET `/profiles/me`).
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `VALIDATION_ERROR` | Invalid field values |
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | User has no profile |
+
+---
+
+## 11. DELETE `/profiles/me`
+
+Delete the authenticated user's profile.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": null,
+  "message": "Profile deleted"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | User has no profile |
+
+---
+
+## 12. POST `/profiles/me/avatar`
+
+Upload or replace the user's avatar image.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+**Content-Type:** `multipart/form-data`
+
+### Request
+- Form field: `file` (binary image file)
+- Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`
+- Max file size: 5 MB
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "avatar": "https://res.cloudinary.com/collabsphere/image/upload/v1234567890/collabsphere/avatars/user123.jpg"
+  },
+  "message": "Avatar uploaded"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `PROFILE_INVALID_FILE` | No file provided or invalid MIME type |
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | User has no profile |
+| 413 | `VALIDATION_ERROR` | File exceeds 5 MB size limit |
+
+---
+
+## 13. POST `/profiles/me/cover`
+
+Upload or replace the user's cover image.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+**Content-Type:** `multipart/form-data`
+
+### Request
+- Form field: `file` (binary image file)
+- Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`
+- Max file size: 5 MB
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "coverImage": "https://res.cloudinary.com/collabsphere/image/upload/v1234567890/collabsphere/covers/user123.jpg"
+  },
+  "message": "Cover image uploaded"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `PROFILE_INVALID_FILE` | No file provided or invalid MIME type |
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | User has no profile |
+| 413 | `VALIDATION_ERROR` | File exceeds 5 MB size limit |
+
+---
+
+## 14. GET `/profiles/:id`
+
+Get a profile by profile ID.
+
+**Auth:** Bearer token required
+**Rate Limit:** Standard
+
+### URL Parameters
+| Param | Type | Validation |
+|-------|------|------------|
+| id | string | Valid MongoDB ObjectId |
+
+### Response — 200 OK
+Returns profile object (same shape as GET `/profiles/me`).
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Missing or invalid access token |
+| 404 | `PROFILE_NOT_FOUND` | Profile with ID doesn't exist |
+
+---
+
+## 15. GET `/geocode`
+
+
+## 15. GET `/geocode`
 
 **Auth:** Bearer token required
 **Rate Limit:** 30 requests / minute per client
@@ -365,7 +647,11 @@ Authorization: Bearer <accessToken>
 | `OTP_RATE_LIMITED` | 429 | Too many OTP requests for this phone |
 | `ACCOUNT_BANNED` | 403 | User is banned by admin |
 | `ACCOUNT_LOCKED` | 403 | Account locked due to OTP failures |
-| `USER_NOT_FOUND` | 404 | User doesn't exist |
+| `USER_NOT_FOUND` | 404 | User does not exist |
+| `PROFILE_NOT_FOUND` | 404 | Profile does not exist or not created yet |
+| `PROFILE_ALREADY_EXISTS` | 409 | User already has a profile |
+| `PROFILE_INVALID_FILE` | 400 | Invalid file or MIME type for upload |
+| `PROFILE_UPLOAD_FAILED` | 400 | Cloudinary upload error |
 | `TOO_MANY_REQUESTS` | 429 | General rate limit exceeded |
 | `GEOCODE_UPSTREAM_ERROR` | 502 | Nominatim geocode service unavailable |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |

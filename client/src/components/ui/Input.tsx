@@ -16,25 +16,25 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-text-secondary mb-1.5">
+          <label className="mb-1.5 block type-label text-paper-dim">
             {label}
           </label>
         )}
         <div className="relative flex">
           {prefix && (
-            <span className="inline-flex items-center px-3 bg-bg-tertiary border border-r-0 border-border rounded-l-lg text-text-secondary text-sm">
+            <span className="inline-flex min-h-11 items-center rounded-l-lg border border-r-0 border-line bg-ink-2 px-3 type-body-m text-paper-dim">
               {prefix}
             </span>
           )}
           <input
             ref={ref}
-            className={`w-full px-3 py-2.5 bg-surface border border-border text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors ${
+            className={`w-full min-h-11 border bg-ink-1 px-3 type-body-m text-paper placeholder:text-paper-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-0 ${
               prefix ? "rounded-r-lg" : "rounded-lg"
-            } ${error ? "border-error focus:ring-error/50" : ""} ${className}`}
+            } ${error ? "border-rust focus-visible:ring-rust/60" : "border-line focus-visible:border-amber"} ${className}`}
             {...props}
           />
         </div>
-        {error && <p className="mt-1 text-sm text-error">{error}</p>}
+        {error && <p className="mt-1.5 type-body-s text-rust">{error}</p>}
       </div>
     );
   }

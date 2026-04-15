@@ -14,6 +14,24 @@ import { OtpInput } from "@/components/ui/OtpInput";
 
 type Step = "phone" | "otp";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: unknown }).response === "object" &&
+    (error as { response?: unknown }).response !== null
+  ) {
+    const response = (error as { response?: { data?: { error?: { message?: string } } } }).response;
+    const message = response?.data?.error?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { sendOtp, login } = useAuth();
@@ -52,8 +70,8 @@ export default function LoginPage() {
       setStep("otp");
       startResendTimer();
       toast.success("OTP sent! Check your console (dev mode)");
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || "Failed to send OTP";
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Failed to send OTP");
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -71,8 +89,8 @@ export default function LoginPage() {
       await login(phone, otp);
       toast.success("Login successful!");
       router.push("/");
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || "Invalid OTP";
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Invalid OTP");
       toast.error(message);
       setOtp("");
     } finally {
@@ -88,8 +106,8 @@ export default function LoginPage() {
       await sendOtp(phone);
       startResendTimer();
       toast.success("OTP resent!");
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || "Failed to resend OTP";
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Failed to resend OTP");
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -99,18 +117,18 @@ export default function LoginPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-accent">CollabSphere</h1>
-        <p className="mt-2 text-text-secondary">
+        <h1 className="type-display-m text-paper">CollabSphere</h1>
+        <p className="mt-2 type-body-m text-paper-dim">
           The collaboration marketplace for creators
         </p>
       </div>
 
       <Card>
         {step === "phone" ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-semibold text-text-primary">Sign in</h2>
-              <p className="text-sm text-text-muted mt-1">
+              <h2 className="type-h2 text-paper">Sign in</h2>
+              <p className="mt-1 type-body-s text-paper-muted">
                 Enter your phone number to receive an OTP
               </p>
             </div>
@@ -135,11 +153,11 @@ export default function LoginPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-semibold text-text-primary">Verify OTP</h2>
-              <p className="text-sm text-text-muted mt-1">
-                Enter the 6-digit code sent to {phone}
+              <h2 className="type-h2 text-paper">Verify OTP</h2>
+              <p className="mt-1 type-body-s text-paper-muted">
+                Enter the 6 digit code sent to {phone}
               </p>
             </div>
 
@@ -154,24 +172,30 @@ export default function LoginPage() {
               Verify
             </Button>
 
-            <div className="flex items-center justify-between text-sm">
-              <button
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                type="button"
                 onClick={() => { setStep("phone"); setOtp(""); }}
-                className="text-accent hover:underline"
+                variant="ghost"
+                size="sm"
+                className="px-3"
               >
                 Change number
-              </button>
+              </Button>
 
               {resendTimer > 0 ? (
-                <span className="text-text-muted">Resend in {resendTimer}s</span>
+                <span className="type-body-s text-paper-muted">Resend in {resendTimer}s</span>
               ) : (
-                <button
+                <Button
+                  type="button"
                   onClick={handleResendOtp}
-                  className="text-accent hover:underline"
+                  variant="secondary"
+                  size="sm"
+                  className="px-3"
                   disabled={isLoading}
                 >
                   Resend OTP
-                </button>
+                </Button>
               )}
             </div>
           </div>

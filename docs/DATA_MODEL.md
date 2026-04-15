@@ -207,3 +207,170 @@ When Sprint 2 adds the Profile collection:
 - Profile will reference `userId` with a unique constraint (1:1 relationship)
 - User collection will NOT store profile data — clean separation
 - The `2dsphere` index for geospatial queries goes on Profile.location, not User
+
+---
+
+# Sprint 2 Data Model
+
+## Overview
+
+Sprint 2 adds a separate **`profiles`** collection with one-to-one relationship to users. This separation allows for profile-specific queries (geospatial, niche filtering) without loading user auth data.
+
+---
+
+## Profile Collection Schema
+
+```typescript
+interface IProfile extends Document {
+  _id: Types.ObjectId;
+
+  // Foreign key to User
+  userId: Types.ObjectId;
+
+  // Identity
+  displayName: string;
+  bio?: string;
+  avatar?: string;        // Cloudinary URL
+  coverImage?: string;    // Cloudinary URL
+
+  // Interests & preferences
+  niche: string[];
+  interests: string[];
+  contentTypes: string[];
+  collaborationPreferences: {
+    types: string[];
+    openToCollab: boolean;
+    preferredPlatforms: string[];
+  };
+
+  // Contact info (with privacy control)
+  contactInfo: {
+    email?: string;
+    website?: string;
+    whatsapp?: string;
+    visibility: 'public' | 'connections' | 'hidden';
+  };
+
+  // Location (GeoJSON Point for geospatial queries)
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [lng, lat]
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+
+  // Verification & metrics
+  isVerified: boolean;
+  verifiedAt?: Date;
+  followerCount: number;
+
+  // Profile completeness (0-100)
+  profileCompleteness: number;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+---
+
+## Field Specifications
+
+### Identity & Media
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `userId` | ObjectId | Yes | Must reference existing User, unique index |
+| `displayName` | String | Yes | Max 60 characters |
+| `bio` | String | No | Max 500 characters |
+| `avatar` | String | No | Cloudinary URL (HTTPS) |
+| `coverImage` | String | No | Cloudinary URL (HTTPS) |
+
+### Interests & Preferences
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `niche` | String[] | `[]` | Creator's primary niche(s) |
+| `interests` | String[] | `[]` | Creator's interest tags |
+| `contentTypes` | String[] | `[]` | Types of content (e.g., "reels", "blogs") |
+| `collaborationPreferences.types` | String[] | `[]` | Preferred collab types (e.g., "paid", "barter") |
+| `collaborationPreferences.openToCollab` | Boolean | `true` | Open to collaboration requests |
+| `collaborationPreferences.preferredPlatforms` | String[] | `[]` | Preferred platforms (e.g., "instagram", "youtube") |
+
+### Location (GeoJSON Point)
+
+**Structure:**
+```json
+{
+  "type": "Point",
+  "coordinates": [72.8777, 19.076],
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "country": "India"
+}
+```
+
+**Notes:**
+- Uses GeoJSON Point format for MongoDB geospatial queries
+- Coordinates are `[longitude, latitude]` (NOT `[lat, lng]`)
+- `2dsphere` index on `location` field enables geo-distance queries
+- City, state, country are denormalized for display (not indexed)
+
+### Contact Info
+
+| Field | Type | Default | Values |
+|-------|------|---------|--------|
+| `contactInfo.email` | String | — | Optional email address |
+| `contactInfo.website` | String | — | Optional website URL |
+| `contactInfo.whatsapp` | String | — | Optional WhatsApp number |
+| `contactInfo.visibility` | String | `'connections'` | `'public'`, `'connections'`, `'hidden'` |
+
+### Verification & Metrics
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `isVerified` | Boolean | `false` | Admin verification badge |
+| `verifiedAt` | Date | — | Timestamp when verified |
+| `followerCount` | Number | `0` | Total follower count (synced from social) |
+
+### Profile Completeness
+
+| Field | Type | Range | Calculation |
+|-------|------|-------|-------------|
+| `profileCompleteness` | Number | 0–100 | Calculated based on filled fields: displayName (20), bio (15), avatar (20), niche (15), interests (15), location (15) |
+
+---
+
+## Indexes
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `userId` | Unique | Enforce one profile per user |
+| `location` | 2dsphere | Geospatial queries (nearby profiles) |
+| `niche` | Regular | Filter by niche |
+| `isVerified` | Regular | Filter for verified creators |
+| `followerCount` | Descending | Sort by popularity |
+
+---
+
+## Relationships
+
+### User ↔ Profile
+
+- **Cardinality:** One-to-one (user has exactly one profile if created)
+- **Foreign key:** `Profile.userId` → `User._id`
+- **Constraints:** Unique index on `userId` enforces one profile per user
+- **When deleted:** If user is deleted, profile is orphaned (soft delete is preferred)
+
+### Future: Profile ↔ MediaPost (Sprint 3+)
+
+- Profile will have many MediaPost documents (portfolio)
+- MediaPost will reference Profile._id
+- Bounded by portfolio size limit
+
+### Future: Profile ↔ CollaborationRequest (Sprint 4+)
+
+- Profile referenced by both creator and brand in CollaborationRequest
+- Requests linked via `creatorProfileId` and `brandProfileId`
