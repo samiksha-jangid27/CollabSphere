@@ -40,6 +40,10 @@ export class AppError extends Error {
     return new AppError(message, HTTP_STATUS.TOO_MANY_REQUESTS, code);
   }
 
+  static badGateway(message: string, code: string = ERROR_CODES.GEOCODE_UPSTREAM_ERROR) {
+    return new AppError(message, HTTP_STATUS.BAD_GATEWAY, code);
+  }
+
   static internal(message: string) {
     return new AppError(message, HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_CODES.INTERNAL_ERROR, false);
   }
@@ -65,6 +69,9 @@ export const ERROR_CODES = {
   PROFILE_ALREADY_EXISTS: 'PROFILE_ALREADY_EXISTS',
   PROFILE_UPLOAD_FAILED: 'PROFILE_UPLOAD_FAILED',
   PROFILE_INVALID_FILE: 'PROFILE_INVALID_FILE',
+
+  // Geocode
+  GEOCODE_UPSTREAM_ERROR: 'GEOCODE_UPSTREAM_ERROR',
 
   // General
   VALIDATION_ERROR: 'VALIDATION_ERROR',

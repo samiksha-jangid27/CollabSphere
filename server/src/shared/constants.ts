@@ -36,6 +36,7 @@ export const HTTP_STATUS = {
   CONFLICT: 409,
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
 } as const;
 
 export const PROFILE_CONFIG = {
