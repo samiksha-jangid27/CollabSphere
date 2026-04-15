@@ -4,6 +4,7 @@
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { config } from './environment';
 import { AppError } from '../shared/errors';
+import logger from '../shared/logger';
 
 cloudinary.config({
   cloud_name: config.CLOUDINARY_CLOUD_NAME,
@@ -28,6 +29,12 @@ export async function uploadImageBuffer(
       },
       (error, result: UploadApiResponse | undefined) => {
         if (error || !result) {
+          if (error) {
+            logger.error('Cloudinary upload error', {
+              message: error.message,
+              http_code: error.http_code,
+            });
+          }
           reject(AppError.internal('Cloudinary upload failed'));
           return;
         }
