@@ -75,10 +75,11 @@ export class ProfileService implements IProfileService {
 
   calculateCompleteness(profile: IProfile): number {
     const checks: Array<[boolean, number]> = [
-      [!!profile.displayName, 25],
-      [!!profile.bio && profile.bio.length >= 20, 25],
-      [!!profile.avatar, 25],
-      [profile.niche.length > 0, 25],
+      [!!profile.displayName, 20],
+      [!!profile.bio && profile.bio.length >= 20, 20],
+      [!!profile.avatar, 20],
+      [profile.niche.length > 0, 20],
+      [!!profile.location?.coordinates, 20],
     ];
     return checks.reduce((sum, [met, pts]) => sum + (met ? pts : 0), 0);
   }
