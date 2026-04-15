@@ -1,14 +1,20 @@
-// ABOUTME: Root layout — Inter font, dark theme, Toaster provider, AuthProvider wrapper.
-// ABOUTME: Applies CollabSphere design tokens globally.
+// ABOUTME: Root layout — Fraunces display + Inter body fonts, Editorial Noir theme, Toaster, AuthProvider.
+// ABOUTME: Exposes --font-display and --font-body CSS variables globally.
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  axes: ["SOFT", "opsz"],
+});
+
 const inter = Inter({
-  variable: "--font-inter",
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
@@ -23,17 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-bg-primary text-text-primary">
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
         <AuthProvider>
           {children}
           <Toaster
             position="top-right"
             toastOptions={{
               style: {
-                background: "#161B26",
-                color: "#F1F3F9",
-                border: "1px solid #2A3350",
+                background: "#111113",
+                color: "#F5F0E6",
+                border: "1px solid #2E2E33",
               },
             }}
           />
