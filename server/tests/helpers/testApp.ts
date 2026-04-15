@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import { errorHandler } from '@/middleware/errorHandler';
 import authRoutes from '@/modules/auth/auth.routes';
 import profileRoutes from '@/modules/profile/profile.routes';
+import geocodeRoutes from '@/modules/geocode/geocode.routes';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cookieParser());
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profiles', profileRoutes);
+app.use('/api/v1/geocode', geocodeRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
