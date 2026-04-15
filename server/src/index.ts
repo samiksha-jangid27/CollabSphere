@@ -12,6 +12,7 @@ import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './modules/auth/auth.routes';
 import profileRoutes from './modules/profile/profile.routes';
+import geocodeRoutes from './modules/geocode/geocode.routes';
 import logger from './shared/logger';
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(apiLimiter);
 // Routes
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/profiles`, profileRoutes);
+app.use(`${API_PREFIX}/geocode`, geocodeRoutes);
 
 // Health check
 app.get('/health', (_req, res) => {
