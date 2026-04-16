@@ -6,9 +6,10 @@ import { IProfileService, CreateProfileInput, UpdateProfileInput } from './profi
 import { IProfile } from '../../models/Profile';
 import { AppError, ERROR_CODES } from '../../shared/errors';
 import { uploadImageBuffer } from '../../config/cloudinary';
+import { AuthRepository } from '../auth/auth.repository';
 
 export class ProfileService implements IProfileService {
-  constructor(private readonly repo: ProfileRepository) {}
+  constructor(private readonly repo: ProfileRepository, private readonly authRepo?: AuthRepository) {}
 
   async createProfile(userId: string, input: CreateProfileInput): Promise<IProfile> {
     const existing = await this.repo.findByUserId(userId);
@@ -18,7 +19,16 @@ export class ProfileService implements IProfileService {
         ERROR_CODES.PROFILE_ALREADY_EXISTS,
       );
     }
-    const profile = await this.repo.create({ ...input, userId } as any);
+
+    // Extract role from input if provided
+    const { role, ...profileInput } = input as any;
+
+    // Update user role if provided and authRepo is available
+    if (role && this.authRepo && ['creator', 'brand', 'admin'].includes(role)) {
+      await this.authRepo.updateRole(userId, role);
+    }
+
+    const profile = await this.repo.create({ ...profileInput, userId } as any);
     profile.profileCompleteness = this.calculateCompleteness(profile);
     await profile.save();
     return profile;

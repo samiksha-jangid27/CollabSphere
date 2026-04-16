@@ -1,5 +1,5 @@
 // ABOUTME: Public profile view at /profile/[id] — fetches by route param and renders the Editorial Noir header and bio.
-// ABOUTME: Read-only. No completeness indicator, no edit controls, no empty state.
+// ABOUTME: Brands can send collaboration requests; creators see view-only profile.
 
 "use client";
 
@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { profileService } from "@/services/profileService";
+import { Button } from "@/components/ui/Button";
+import { RequestForm } from "@/components/collaboration/RequestForm";
+import { useAuth } from "@/hooks/useAuth";
 import type { Profile } from "@/types/profile";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileBio } from "@/components/profile/ProfileBio";
@@ -21,7 +24,9 @@ type FetchState =
 export default function ProfileByIdPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const { user, isAuthenticated } = useAuth();
   const [state, setState] = useState<FetchState>({ kind: "loading" });
+  const [showRequestForm, setShowRequestForm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -107,6 +112,36 @@ export default function ProfileByIdPage() {
       <div style={{ height: 96 }} />
 
       <ProfileBio profile={state.profile} />
+
+      {state.kind === "ready" && (() => {
+        const isBrand = user?.role === "brand";
+        const showSendButton =
+          isAuthenticated && isBrand && user?._id !== state.profile.userId;
+
+        return (
+          <>
+            {showSendButton && (
+              <motion.div variants={fadeUp} style={{ marginTop: 48 }}>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowRequestForm(true)}
+                >
+                  Send Request
+                </Button>
+              </motion.div>
+            )}
+
+            <RequestForm
+              isOpen={showRequestForm}
+              onClose={() => setShowRequestForm(false)}
+              onSuccess={() => {
+                setShowRequestForm(false);
+              }}
+              preselectedCreatorId={state.profile._id}
+            />
+          </>
+        );
+      })()}
     </motion.div>
   );
 }

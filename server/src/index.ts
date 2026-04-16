@@ -14,6 +14,7 @@ import authRoutes from './modules/auth/auth.routes';
 import profileRoutes from './modules/profile/profile.routes';
 import geocodeRoutes from './modules/geocode/geocode.routes';
 import searchRoutes from './modules/search/search.routes';
+import collaborationRoutes from './modules/collaboration/collaboration.routes';
 import logger from './shared/logger';
 
 const app = express();
@@ -37,6 +38,7 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/profiles`, profileRoutes);
 app.use(`${API_PREFIX}/geocode`, geocodeRoutes);
 app.use(`${API_PREFIX}/search`, searchRoutes);
+app.use(`${API_PREFIX}/collaborations`, collaborationRoutes);
 
 // Health check
 app.get('/health', (_req, res) => {

@@ -30,10 +30,9 @@ const NAV_ITEMS: ReadonlyArray<Omit<NavItem, "active">> = [
     match: (pathname) => pathname.startsWith("/discover"),
   },
   {
-    label: "Collaborate",
-    href: "#",
-    match: () => false,
-    soon: true,
+    label: "Collaborations",
+    href: "/collaborations/inbox",
+    match: (pathname) => pathname.startsWith("/collaborations"),
   },
   {
     label: "Messages",

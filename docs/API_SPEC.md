@@ -1,4 +1,4 @@
-# CollabSphere — API Specification (Sprints 1–3)
+# CollabSphere — API Specification (Sprints 1–4)
 
 Base URL: `http://localhost:5001/api/v1`
 
@@ -735,6 +735,9 @@ Authorization: Bearer <accessToken>
 | `GEOCODE_UPSTREAM_ERROR` | 502 | Nominatim geocode service unavailable |
 | `INVALID_SEARCH_FILTERS` | 400 | No search filters provided (city, niche, platform all missing) |
 | `SEARCH_FAILED` | 500 | Search service error |
+| `COLLAB_REQUEST_NOT_FOUND` | 404 | Collaboration request does not exist |
+| `COLLAB_UNAUTHORIZED` | 403 | User is not authorized (not recipient or sender, or invalid role) |
+| `COLLAB_INVALID_STATUS_TRANSITION` | 400 | Cannot perform action on request with current status |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 
 ---
@@ -791,3 +794,246 @@ Algorithm: HS256, Expiry: 7 days
 }
 ```
 Algorithm: HS256, Expiry: 24 hours
+
+---
+
+## 18. POST `/collaborations`
+
+Create a collaboration request (brand sends to creator).
+
+**Auth:** Required (brand role only)
+
+### Request
+```json
+{
+  "userId": "664a1b2c3d4e5f6a7b8c9d0e",
+  "title": "Fashion Campaign",
+  "description": "Looking for fashion influencers for summer campaign",
+  "budget": 50000,
+  "deadline": "2026-05-16T00:00:00.000Z"
+}
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| userId | string | Yes | Valid MongoDB ObjectId (creator receiving) |
+| title | string | Yes | 1–200 characters |
+| description | string | Yes | 1–2000 characters |
+| budget | number | Yes | Positive integer |
+| deadline | string | Yes | ISO 8601 date, must be in future |
+
+### Response — 201 Created
+```json
+{
+  "success": true,
+  "data": {
+    "collaboration": {
+      "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+      "brandId": "664a1b2c3d4e5f6a7b8c9d0e",
+      "title": "Fashion Campaign",
+      "description": "Looking for fashion influencers for summer campaign",
+      "budget": 50000,
+      "deadline": "2026-05-16T00:00:00.000Z",
+      "status": "Open",
+      "createdAt": "2026-04-16T10:30:00.000Z",
+      "updatedAt": "2026-04-16T10:30:00.000Z"
+    }
+  },
+  "message": "Request created"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `VALIDATION_ERROR` | Invalid input |
+| 400 | `VALIDATION_ERROR` | Deadline is in the past |
+| 401 | `AUTH_INVALID_TOKEN` | Invalid JWT |
+| 403 | `COLLAB_UNAUTHORIZED` | User is not a brand |
+
+---
+
+## 19. GET `/collaborations/inbox`
+
+Get collaboration requests received by creator (paginated).
+
+**Auth:** Required (creator role only)
+
+### Query Parameters
+```
+?page=1&status=Open
+```
+
+| Param | Type | Default | Validation |
+|-------|------|---------|------------|
+| page | number | 1 | 1–∞ |
+| status | string | (all) | `Open`, `Accepted`, `Declined`, `Closed` (optional) |
+| limit | number | 10 | 1–100 |
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+        "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+        "brandId": "664a1b2c3d4e5f6a7b8c9d0e",
+        "title": "Fashion Campaign",
+        "description": "...",
+        "budget": 50000,
+        "deadline": "2026-05-16T00:00:00.000Z",
+        "status": "Open",
+        "createdAt": "2026-04-16T10:30:00.000Z",
+        "updatedAt": "2026-04-16T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "hasNext": false
+    }
+  },
+  "message": "Inbox retrieved"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Invalid JWT |
+| 403 | `COLLAB_UNAUTHORIZED` | User is not a creator |
+
+---
+
+## 20. GET `/collaborations/sent`
+
+Get collaboration requests sent by brand (paginated).
+
+**Auth:** Required (brand role only)
+
+### Query Parameters
+```
+?page=1&status=Open
+```
+
+| Param | Type | Default | Validation |
+|-------|------|---------|------------|
+| page | number | 1 | 1–∞ |
+| status | string | (all) | `Open`, `Pending`, `Accepted`, `Declined`, `Closed` (optional) |
+| limit | number | 10 | 1–100 |
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+        "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+        "brandId": "664a1b2c3d4e5f6a7b8c9d0e",
+        "title": "Fashion Campaign",
+        "description": "...",
+        "budget": 50000,
+        "deadline": "2026-05-16T00:00:00.000Z",
+        "status": "Open",
+        "createdAt": "2026-04-16T10:30:00.000Z",
+        "updatedAt": "2026-04-16T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 5,
+      "hasNext": true
+    }
+  },
+  "message": "Sent requests retrieved"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Invalid JWT |
+| 403 | `COLLAB_UNAUTHORIZED` | User is not a brand |
+
+---
+
+## 21. PATCH `/collaborations/:id/accept`
+
+Accept a collaboration request (creator only).
+
+**Auth:** Required (creator role, must be recipient)
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "collaboration": {
+      "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+      "brandId": "664a1b2c3d4e5f6a7b8c9d0e",
+      "title": "Fashion Campaign",
+      "description": "...",
+      "budget": 50000,
+      "deadline": "2026-05-16T00:00:00.000Z",
+      "status": "Accepted",
+      "createdAt": "2026-04-16T10:30:00.000Z",
+      "updatedAt": "2026-04-16T11:45:00.000Z"
+    }
+  },
+  "message": "Request accepted"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Invalid JWT |
+| 404 | `COLLAB_REQUEST_NOT_FOUND` | Request not found |
+| 403 | `COLLAB_UNAUTHORIZED` | User is not the recipient or request already declined |
+| 400 | `COLLAB_INVALID_STATUS_TRANSITION` | Request status doesn't allow accept |
+
+---
+
+## 22. PATCH `/collaborations/:id/decline`
+
+Decline a collaboration request (creator only).
+
+**Auth:** Required (creator role, must be recipient)
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "collaboration": {
+      "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+      "brandId": "664a1b2c3d4e5f6a7b8c9d0e",
+      "title": "Fashion Campaign",
+      "description": "...",
+      "budget": 50000,
+      "deadline": "2026-05-16T00:00:00.000Z",
+      "status": "Declined",
+      "createdAt": "2026-04-16T10:30:00.000Z",
+      "updatedAt": "2026-04-16T11:45:00.000Z"
+    }
+  },
+  "message": "Request declined"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 401 | `AUTH_INVALID_TOKEN` | Invalid JWT |
+| 404 | `COLLAB_REQUEST_NOT_FOUND` | Request not found |
+| 403 | `COLLAB_UNAUTHORIZED` | User is not the recipient or request already accepted |
+| 400 | `COLLAB_INVALID_STATUS_TRANSITION` | Request status doesn't allow decline |

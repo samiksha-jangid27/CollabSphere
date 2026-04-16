@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
 import { ProfileRepository } from './profile.repository';
+import { AuthRepository } from '../auth/auth.repository';
 import { authenticate } from '../../middleware/authenticate';
 import { validate } from '../../middleware/validate';
 import { uploadSingleImage } from '../../middleware/upload';
@@ -15,7 +16,8 @@ import {
 } from './profile.validation';
 
 const repo = new ProfileRepository();
-const service = new ProfileService(repo);
+const authRepo = new AuthRepository();
+const service = new ProfileService(repo, authRepo);
 const controller = new ProfileController(service);
 
 const router = Router();

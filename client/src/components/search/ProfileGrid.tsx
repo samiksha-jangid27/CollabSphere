@@ -3,10 +3,14 @@
 
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/Button';
+import { RequestForm } from '@/components/collaboration/RequestForm';
 import { fadeUp, staggerContainer } from '@/lib/motion';
+import { useAuth } from '@/hooks/useAuth';
 import type { Profile } from '@/types/profile';
 
 interface ProfileGridProps {
@@ -90,11 +94,15 @@ function SkeletonCard() {
 }
 
 function ProfileCard({ profile }: { profile: Profile }) {
+  const { user, isAuthenticated } = useAuth();
+  const [showRequestForm, setShowRequestForm] = useState(false);
   const initials = initialsOf(profile.displayName);
   const location = profile.location
     ? [profile.location.city, profile.location.country].filter(Boolean).join(', ')
     : null;
   const niches = profile.niche.slice(0, 3);
+  const isBrand = user?.role === 'brand';
+  const showSendButton = isAuthenticated && isBrand && user?._id !== profile.userId;
 
   return (
     <motion.article variants={fadeUp}>
@@ -262,6 +270,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
                 fontSize: 12,
                 color: 'var(--paper-muted)',
                 fontFamily: 'var(--font-body)',
+                marginBottom: showSendButton ? 16 : 0,
               }}
             >
               <span style={{ color: 'var(--amber)', fontWeight: 600 }}>
@@ -274,8 +283,30 @@ function ProfileCard({ profile }: { profile: Profile }) {
               {' '}followers
             </div>
           )}
+
+          {/* Send Request Button */}
+          {showSendButton && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowRequestForm(true)}
+              style={{ width: '100%' }}
+            >
+              Send Request
+            </Button>
+          )}
         </div>
       </Link>
+
+      {/* Request Form Modal */}
+      <RequestForm
+        isOpen={showRequestForm}
+        onClose={() => setShowRequestForm(false)}
+        onSuccess={() => {
+          // Optional: show success toast, refresh list, etc.
+        }}
+        preselectedCreatorId={profile._id}
+      />
     </motion.article>
   );
 }

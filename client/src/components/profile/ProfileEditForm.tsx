@@ -43,6 +43,7 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
 
   const [displayNameFocused, setDisplayNameFocused] = useState(false);
   const [bioFocused, setBioFocused] = useState(false);
+  const [role, setRole] = useState<string>("creator");
 
   const bioRemaining = BIO_MAX - bio.length;
 
@@ -56,6 +57,7 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
       bio: bio.trim() || undefined,
       niche,
       location,
+      ...(role && { role: role as 'creator' | 'brand' }),
     };
 
     if (!payload.displayName) {
@@ -148,6 +150,40 @@ export function ProfileEditForm({ initial, onAvatarUploaded, hideAvatar }: Profi
           </span>
         </label>
       </motion.div>
+
+      {!isUpdate && (
+        <motion.div variants={fadeUp} className="mb-12">
+          <span className="type-label text-paper-dim block uppercase">
+            Account type
+          </span>
+          <div className="mt-4 flex gap-4">
+            <button
+              type="button"
+              onClick={() => setRole("creator")}
+              className={`flex-1 px-4 py-3 text-sm font-medium uppercase transition ${
+                role === "creator"
+                  ? "bg-amber text-ink-0"
+                  : "border border-line bg-transparent text-paper hover:border-line-strong"
+              }`}
+              style={{ borderRadius: 0 }}
+            >
+              Creator
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("brand")}
+              className={`flex-1 px-4 py-3 text-sm font-medium uppercase transition ${
+                role === "brand"
+                  ? "bg-amber text-ink-0"
+                  : "border border-line bg-transparent text-paper hover:border-line-strong"
+              }`}
+              style={{ borderRadius: 0 }}
+            >
+              Brand
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div variants={fadeUp} className="mb-12">
         <span className="type-label text-paper-dim block uppercase">Niche</span>

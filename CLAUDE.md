@@ -263,8 +263,54 @@ client/src/
 - Modified: `client/src/app/(main)/layout.tsx` (Discover nav), `server/src/index.ts`, `server/src/models/Profile.ts`, `server/src/shared/errors.ts`, `docs/API_SPEC.md`
 - Docs: `docs/API_SPEC.md` (endpoints 16-17)
 
-### Next Steps (Sprint 4 — Collaboration Marketplace)
-- CollaborationRequest model and CRUD endpoints
-- Inbox and sent requests pages
-- Request form with user selection
-- Authorization: only creators receive, brands/admins send
+### Sprint 4 — Collaboration Marketplace ✅ COMPLETE
+
+**Implemented Features:**
+
+**Backend:**
+- ✅ CollaborationRequest model (Mongoose schema with status enum: Open, Pending, Accepted, Declined, Closed)
+- ✅ Collaboration module (6 files: interfaces, validation, repository, service, controller, routes)
+- ✅ Five endpoints: POST (create), GET /inbox, GET /sent, PATCH /:id/accept, PATCH /:id/decline
+- ✅ Authorization: brand-only POST, creator-only inbox/accept/decline, recipient validation
+- ✅ Pagination support (page, limit, total, hasNext) on inbox/sent queries
+- ✅ MongoDB indexes on (userId, status) and (brandId, status)
+- ✅ Error codes: `COLLAB_REQUEST_NOT_FOUND`, `COLLAB_UNAUTHORIZED`, `COLLAB_INVALID_STATUS_TRANSITION`
+- ✅ 35 tests passing (15 unit + 20 integration)
+
+**Frontend:**
+- ✅ RequestForm component (debounced creator search, form fields: title, description, budget, deadline)
+- ✅ RequestCard component (responsive card with status badge, accept/decline buttons for recipients)
+- ✅ RequestList component (grid layout with pagination, skeleton loading, empty state)
+- ✅ InboxPage at `/collaborations/inbox` (creator receives requests, status filter, pagination)
+- ✅ SentPage at `/collaborations/sent` (brand tracks sent requests, status filter, pagination)
+- ✅ useCollaboration hook (create, fetch inbox/sent, accept/decline with optimistic updates)
+- ✅ collaborationService API client (proper response unwrapping via `data.data`)
+- ✅ ProfileCard button integration: "Send Request" button (brand-only, pre-selects creator)
+- ✅ Navigation: "Collaborations" link added to main layout
+
+**Documentation:**
+- ✅ API_SPEC.md updated with title (Sprints 1–4)
+- ✅ Endpoints 18-22 documented (POST create, GET inbox, GET sent, PATCH accept, PATCH decline)
+- ✅ Error codes added to reference section
+- ✅ Response shapes and pagination structure documented
+
+**Design System Compliance:**
+- Editorial Noir fully applied (--ink-0/1, --paper, --amber accents, --line borders)
+- RequestForm: modal with 0-radius pills, --amber focus rings, form validation
+- RequestCard: truncated description, status badges (Open=amber, Accepted=sage, etc.)
+- RequestList: auto-fill grid (minmax(320px, 1fr)), pagination controls, skeleton screens
+- Pages: numbered eyebrows (02 / Inbox, 03 / Sent), Editorial Noir typography
+- Responsive: mobile-first with adaptive grid columns
+- No dashes in UI copy
+
+**Key Files:**
+- Backend: `server/src/modules/collaboration/` (6 files), `server/tests/collaboration/` (2 files)
+- Frontend: `client/src/app/(main)/collaborations/inbox/` and `/sent/`, `client/src/components/collaboration/` (3 components), `client/src/hooks/useCollaboration.ts`, `client/src/services/collaborationService.ts`, `client/src/types/collaboration.ts`
+- Modified: `client/src/app/(main)/layout.tsx` (nav), `client/src/components/profile/ProfileCard.tsx` (Send Request button), `server/src/index.ts` (routes), `server/src/shared/errors.ts`, `docs/API_SPEC.md`
+
+### Next Steps (Sprint 5 — Messaging & Verification)
+- Conversation and Message models
+- Socket.io setup for real-time chat
+- Chat UI (conversation list + message window)
+- OAuth social account verification (Instagram)
+- Admin verification queue and moderation

@@ -6,7 +6,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { CompletenessIndicator } from "@/components/profile/CompletenessIndicator";
 import { ProfileBio } from "@/components/profile/ProfileBio";
@@ -30,6 +32,7 @@ function formatLocation(profile: Profile): string | null {
 
 export default function ProfileMePage() {
   const { profile, loading, error, hasProfile } = useProfile();
+  const { user } = useAuth();
 
   if (loading) {
     return <div className="type-eyebrow text-paper-muted">loading</div>;
@@ -112,7 +115,7 @@ export default function ProfileMePage() {
             >
               {profile.displayName}
             </h1>
-            <div className="mt-2 type-eyebrow text-paper-muted">creator</div>
+            <div className="mt-2 type-eyebrow text-paper-muted">{user?.role}</div>
             {location && (
               <div className="mt-3 type-body-s text-paper-dim lowercase">
                 {location}
@@ -162,6 +165,9 @@ export default function ProfileMePage() {
               Edit Profile
             </Link>
           </div>
+
+          {/* Logout Button */}
+          <LogoutButton />
         </motion.aside>
 
         {/* Main content */}
@@ -171,6 +177,48 @@ export default function ProfileMePage() {
 
       </div>
     </motion.div>
+  );
+}
+
+function LogoutButton() {
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={handleLogout}
+        className="type-eyebrow block w-full text-center lg:text-left"
+        style={{
+          padding: "10px 16px",
+          border: "1px solid var(--paper)",
+          background: "transparent",
+          color: "var(--paper)",
+          letterSpacing: "0.08em",
+          transition: "background 150ms linear, color 150ms linear",
+          cursor: "pointer",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = "var(--paper)";
+          (e.currentTarget as HTMLButtonElement).style.color = "var(--ink-0)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          (e.currentTarget as HTMLButtonElement).style.color = "var(--paper)";
+        }}
+      >
+        Logout
+      </button>
+    </div>
   );
 }
 

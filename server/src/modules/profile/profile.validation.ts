@@ -35,6 +35,7 @@ export const createProfileSchema = z.object({
     collaborationPreferences: collaborationPrefsSchema.optional(),
     contactInfo: contactInfoSchema.optional(),
     location: locationSchema.optional(),
+    role: z.enum(['creator', 'brand']).optional(),
   }),
 });
 

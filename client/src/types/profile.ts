@@ -52,6 +52,7 @@ export interface CreateProfileInput {
   collaborationPreferences?: CollaborationPreferences;
   contactInfo?: ContactInfo;
   location?: GeoLocation;
+  role?: 'creator' | 'brand';
 }
 
 export type UpdateProfileInput = Partial<CreateProfileInput>;

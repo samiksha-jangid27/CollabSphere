@@ -80,4 +80,8 @@ export class AuthRepository extends BaseRepository<IUser> {
   async setPhoneVerified(userId: string): Promise<void> {
     await this.model.findByIdAndUpdate(userId, { phoneVerified: true });
   }
+
+  async updateRole(userId: string, role: 'creator' | 'brand' | 'admin'): Promise<void> {
+    await this.model.findByIdAndUpdate(userId, { role });
+  }
 }
