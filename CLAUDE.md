@@ -223,12 +223,48 @@ client/src/
 - Responsive layout (mobile-first)
 - Sharp button radius (2px max), pill radius (0)
 
-### Next Steps (Sprint 3 — Discovery & Search)
-- Geo-search by location + niche
-- Discovery feed with filters
-- Search refinement UI
+### Sprint 3 — Discovery & Search ✅ COMPLETE
+
+**Implemented Features:**
+
+**Backend:**
+- ✅ Search module (6 files: interfaces, validation, repository, service, controller, routes)
+- ✅ Search repository with `searchProfiles(filters)` and `searchCities(q)` methods
+- ✅ Two public endpoints: `GET /api/v1/search/profiles` (city/niche/platform filters) and `GET /api/v1/search/cities` (autocomplete)
+- ✅ MongoDB indexes on `location.city`, `niche`, `socialAccounts.platform`
+- ✅ Error codes: `INVALID_SEARCH_FILTERS`, `SEARCH_FAILED`
+- ✅ 12 tests passing (7 unit + 5 integration)
+
+**Frontend:**
+- ✅ Discover page at `/discover` (main app navigation integrated)
+- ✅ SearchService API client (`searchService.ts`)
+- ✅ useSearch hook with results/loading/error state
+- ✅ SearchBar component with 300ms debounced city autocomplete
+- ✅ FilterPanel component (niche + platform dropdowns, 0-radius design)
+- ✅ ProfileGrid component (responsive 1/2/3-col grid, skeleton loading, empty state)
+- ✅ Main layout updated: "Discover" nav link active and functional
+
+**Documentation:**
+- ✅ API_SPEC.md updated with endpoints 16 & 17
+- ✅ Error codes documented
+- ✅ Port corrected from 5000 → 5001 in API_SPEC.md
+
+**Design System Compliance:**
+- Editorial Noir fully applied (--ink, --paper, --amber, --line)
+- SearchBar: --ink-2 input, --amber focus ring and button
+- FilterPanel: 0-radius pills, --amber focus ring, conditional Clear button
+- ProfileGrid: auto-fill grid with minmax(280px, 1fr), fadeUp + staggerContainer motion
+- Responsive: 1 col mobile, 2 col 640px+, 3 col 1024px+
+- No dashes in UI copy
 
 **Key Files:**
-- Backend: `server/src/modules/profile/`, `server/src/models/Profile.ts`, `server/src/config/cloudinary.ts`
-- Frontend: `client/src/app/(main)/profile/`, `client/src/components/profile/`
-- Docs: `docs/API_SPEC.md` (sections 8-14)
+- Backend: `server/src/modules/search/` (6 files), `server/tests/search/` (2 files)
+- Frontend: `client/src/app/(main)/discover/page.tsx`, `client/src/components/search/` (4 files), `client/src/services/searchService.ts`, `client/src/hooks/useSearch.ts`
+- Modified: `client/src/app/(main)/layout.tsx` (Discover nav), `server/src/index.ts`, `server/src/models/Profile.ts`, `server/src/shared/errors.ts`, `docs/API_SPEC.md`
+- Docs: `docs/API_SPEC.md` (endpoints 16-17)
+
+### Next Steps (Sprint 4 — Collaboration Marketplace)
+- CollaborationRequest model and CRUD endpoints
+- Inbox and sent requests pages
+- Request form with user selection
+- Authorization: only creators receive, brands/admins send

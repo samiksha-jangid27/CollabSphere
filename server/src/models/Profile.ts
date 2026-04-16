@@ -108,6 +108,7 @@ const profileSchema = new Schema<IProfile>(
 );
 
 profileSchema.index({ location: '2dsphere' });
+profileSchema.index({ 'location.city': 1 });
 profileSchema.index({ niche: 1 });
 profileSchema.index({ isVerified: 1 });
 profileSchema.index({ followerCount: -1 });

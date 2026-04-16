@@ -1,6 +1,6 @@
-# CollabSphere — Sprint 1 API Specification
+# CollabSphere — API Specification (Sprints 1–3)
 
-Base URL: `http://localhost:5000/api/v1`
+Base URL: `http://localhost:5001/api/v1`
 
 ## Standard Response Shapes
 
@@ -633,6 +633,85 @@ Authorization: Bearer <accessToken>
 
 ---
 
+## 16. GET `/search/profiles`
+
+**Auth:** None (public endpoint)
+**Rate Limit:** 100 requests / minute per client
+
+### Query Parameters
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| city | string | Conditional | 1 to 80 characters |
+| niche | string | Conditional | 1 to 80 characters |
+| platform | string | Conditional | 1 to 80 characters |
+
+*At least one of `city`, `niche`, or `platform` is required.*
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "664a1b2c3d4e5f6a7b8c9d0e",
+      "userId": "664a1b2c3d4e5f6a7b8c9d0a",
+      "displayName": "Aarav Shah",
+      "bio": "Fashion creator from Mumbai",
+      "avatar": "https://res.cloudinary.com/...",
+      "niche": ["fashion", "lifestyle"],
+      "location": {
+        "type": "Point",
+        "coordinates": [72.8479, 19.0176],
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "country": "India"
+      },
+      "profileCompleteness": 85,
+      "isVerified": false
+    }
+  ],
+  "message": "Found 5 profiles"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 400 | `INVALID_SEARCH_FILTERS` | No filters provided (city, niche, platform all missing) |
+| 429 | `TOO_MANY_REQUESTS` | Rate limit exceeded |
+
+---
+
+## 17. GET `/search/cities`
+
+**Auth:** None (public endpoint)
+**Rate Limit:** 100 requests / minute per client
+
+### Query Parameters
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| q | string | No | 0 to 80 characters (prefix search) |
+
+*If `q` is not provided, returns all cities.*
+
+### Response — 200 OK
+```json
+{
+  "success": true,
+  "data": ["Mumbai", "Delhi", "Bangalore", "Kolkata", "Chennai"],
+  "message": "Cities retrieved"
+}
+```
+
+### Errors
+| Status | Code | When |
+|--------|------|------|
+| 429 | `TOO_MANY_REQUESTS` | Rate limit exceeded |
+
+---
+
 ## Error Code Reference
 
 | Code | HTTP Status | Description |
@@ -654,6 +733,8 @@ Authorization: Bearer <accessToken>
 | `PROFILE_UPLOAD_FAILED` | 400 | Cloudinary upload error |
 | `TOO_MANY_REQUESTS` | 429 | General rate limit exceeded |
 | `GEOCODE_UPSTREAM_ERROR` | 502 | Nominatim geocode service unavailable |
+| `INVALID_SEARCH_FILTERS` | 400 | No search filters provided (city, niche, platform all missing) |
+| `SEARCH_FAILED` | 500 | Search service error |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 
 ---
