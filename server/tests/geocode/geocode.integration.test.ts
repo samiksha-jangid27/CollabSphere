@@ -2,6 +2,7 @@
 // ABOUTME: Mocks global.fetch so no real Nominatim calls are made.
 
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import { setupTestDb, teardownTestDb, clearCollections } from '../helpers/testDb';
 import { app } from '../helpers/testApp';
 import { User } from '@/models/User';
@@ -33,11 +34,12 @@ afterEach(async () => {
 });
 
 async function authedUser() {
+  const hashedPassword = await bcrypt.hash('password123', 10);
   const user = await User.create({
-    phone: '+919876543210',
+    username: 'testuser',
+    password: hashedPassword,
     email: 'a@b.com',
     role: 'creator',
-    phoneVerified: true,
   });
   const token = tokenService.generateAccessToken({
     userId: user._id.toString(),

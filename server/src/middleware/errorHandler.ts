@@ -29,7 +29,9 @@ export function errorHandler(
 
   // Mongoose duplicate key error
   if (err.name === 'MongoServerError' && (err as any).code === 11000) {
-    const appError = AppError.conflict('Duplicate entry', 'CONFLICT');
+    const keyPattern = (err as any).keyPattern;
+    const field = keyPattern ? Object.keys(keyPattern)[0] : 'field';
+    const appError = AppError.conflict(`${field} already exists`, 'CONFLICT');
     sendError(res, appError);
     return;
   }

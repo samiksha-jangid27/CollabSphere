@@ -305,7 +305,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
         onSuccess={() => {
           // Optional: show success toast, refresh list, etc.
         }}
-        preselectedCreatorId={profile._id}
+        preselectedCreatorId={profile.userId}
       />
     </motion.article>
   );

@@ -2,6 +2,7 @@
 // ABOUTME: Runs against mongodb-memory-server for isolation.
 
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { setupTestDb, teardownTestDb, clearCollections } from '../helpers/testDb';
 import { Profile } from '@/models/Profile';
 import { User } from '@/models/User';
@@ -19,7 +20,8 @@ afterEach(async () => {
 });
 
 async function createUser() {
-  return User.create({ phone: '+919876543210', role: 'creator' });
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  return User.create({ username: 'testuser', password: hashedPassword, role: 'creator' });
 }
 
 describe('Profile Model', () => {

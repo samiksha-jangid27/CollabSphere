@@ -5,9 +5,8 @@ import api from "./api";
 
 export interface User {
   _id: string;
-  phone: string;
+  username: string;
   email?: string;
-  phoneVerified: boolean;
   emailVerified: boolean;
   role: "creator" | "brand" | "admin";
   isActive: boolean;
@@ -22,18 +21,18 @@ interface ApiResponse<T> {
 }
 
 export const authService = {
-  async sendOtp(phone: string) {
-    const { data } = await api.post<ApiResponse<{ phone: string; isNewUser: boolean }>>(
-      "/auth/otp/send",
-      { phone }
+  async register(username: string, password: string, role: "creator" | "brand", email?: string) {
+    const { data } = await api.post<ApiResponse<{ accessToken: string; user: User }>>(
+      "/auth/register",
+      { username, password, role, email }
     );
     return data;
   },
 
-  async verifyOtp(phone: string, otp: string) {
+  async login(username: string, password: string) {
     const { data } = await api.post<ApiResponse<{ accessToken: string; user: User }>>(
-      "/auth/otp/verify",
-      { phone, otp }
+      "/auth/login",
+      { username, password }
     );
     return data;
   },

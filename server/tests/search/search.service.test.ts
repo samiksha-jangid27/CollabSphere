@@ -1,6 +1,7 @@
 // ABOUTME: Unit tests for SearchService — validates filter requirement and search logic.
 // ABOUTME: Uses in-memory DB for repository tests.
 
+import bcrypt from 'bcryptjs';
 import { setupTestDb, teardownTestDb, clearCollections } from '../helpers/testDb';
 import { User } from '@/models/User';
 import { Profile } from '@/models/Profile';
@@ -11,7 +12,7 @@ import { AppError } from '@/shared/errors';
 const repo = new SearchRepository();
 const service = new SearchService(repo);
 
-let phoneCounter = 1;
+let userCounter = 1;
 
 beforeAll(async () => {
   await setupTestDb();
@@ -21,7 +22,7 @@ afterAll(async () => {
 });
 afterEach(async () => {
   await clearCollections();
-  phoneCounter = 1;
+  userCounter = 1;
   jest.clearAllMocks();
 });
 
@@ -30,9 +31,11 @@ async function createTestProfile(data: {
   niche?: string[];
   location?: { type: 'Point'; coordinates: [number, number]; city: string };
 }) {
-  const user = await User.create({ 
-    phone: `+9198765432${phoneCounter++}`, 
-    role: 'creator' 
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  const user = await User.create({
+    username: `testuser${userCounter++}`,
+    password: hashedPassword,
+    role: 'creator'
   });
   return Profile.create({
     userId: user._id,

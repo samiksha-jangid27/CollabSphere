@@ -1,5 +1,5 @@
-// ABOUTME: Login page — email and password authentication.
-// ABOUTME: Uses CollabSphere design system with dark theme, toast errors, loading states.
+// ABOUTME: Register page — create new creator or brand account with email/password.
+// ABOUTME: Handles role selection, form validation, and email verification flow.
 
 "use client";
 
@@ -30,32 +30,46 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export default function LoginPage() {
+type Role = "creator" | "brand";
+
+export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { register } = useAuth();
 
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<Role>("creator");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleLogin() {
+  async function handleRegister() {
     if (!username.trim()) {
-      toast.error("Please enter your username");
+      toast.error("Please enter a username");
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error("Please enter your email");
       return;
     }
 
     if (!password.trim()) {
-      toast.error("Please enter your password");
+      toast.error("Please enter a password");
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
 
     setIsLoading(true);
     try {
-      await login(username, password);
-      toast.success("Login successful!");
-      router.push("/");
+      await register(username, password, role, email);
+      toast.success("Account created! Redirecting...");
+      router.push("/verify");
     } catch (error: unknown) {
-      const message = getErrorMessage(error, "Login failed");
+      const message = getErrorMessage(error, "Registration failed");
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -74,10 +88,31 @@ export default function LoginPage() {
       <Card>
         <div className="space-y-5">
           <div>
-            <h2 className="type-h2 text-paper">Sign in</h2>
+            <h2 className="type-h2 text-paper">Create account</h2>
             <p className="mt-1 type-body-s text-paper-muted">
-              Enter your credentials to access your account
+              Join as a creator or brand
             </p>
+          </div>
+
+          <div>
+            <label className="block type-body-s font-medium text-paper mb-2">
+              Account Type
+            </label>
+            <div className="flex gap-3">
+              {(["creator", "brand"] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRole(r)}
+                  className={`flex-1 px-4 py-2 rounded border text-center type-body-s transition ${
+                    role === r
+                      ? "bg-amber border-amber text-ink-0"
+                      : "border-line bg-ink-2 text-paper hover:border-amber"
+                  }`}
+                >
+                  {r.charAt(0).toUpperCase() + r.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
 
           <Input
@@ -86,7 +121,14 @@ export default function LoginPage() {
             placeholder="your_username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+
+          <Input
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <Input
@@ -95,23 +137,23 @@ export default function LoginPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            onKeyDown={(e) => e.key === "Enter" && handleRegister()}
           />
 
           <Button
             className="w-full"
             size="lg"
             isLoading={isLoading}
-            onClick={handleLogin}
+            onClick={handleRegister}
           >
-            Sign in
+            Create account
           </Button>
 
           <div className="text-center">
             <p className="type-body-s text-paper-muted">
-              Don't have an account?{" "}
-              <Link href="/register" className="text-amber hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/login" className="text-amber hover:underline">
+                Sign in
               </Link>
             </p>
           </div>

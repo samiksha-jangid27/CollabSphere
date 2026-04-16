@@ -1,42 +1,36 @@
 // ABOUTME: User Mongoose model — the core identity record for authentication and access control.
-// ABOUTME: Embeds OTP subdocument for atomic auth operations; strips sensitive fields in toJSON.
+// ABOUTME: Uses username/password for auth; strips sensitive fields in toJSON.
 
 import { Schema, model, Document, Types } from 'mongoose';
 
-export interface IOtpData {
-  code: string;
-  expiresAt: Date;
-  attempts: number;
-  requestCount: number;
-  lastRequestAt: Date;
-  lockedUntil?: Date;
-}
-
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  phone: string;
+  username: string;
+  password: string;
   email?: string;
-  phoneVerified: boolean;
   emailVerified: boolean;
   role: 'creator' | 'brand' | 'admin';
   isActive: boolean;
   isBanned: boolean;
   refreshToken?: string;
-  otp?: IOtpData;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>(
   {
-    phone: {
+    username: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: [true, 'Username is required'],
       unique: true,
-      validate: {
-        validator: (v: string) => /^\+[1-9]\d{1,14}$/.test(v),
-        message: 'Phone must be in E.164 format (e.g. +919876543210)',
-      },
+      trim: true,
+      minlength: [3, 'Username must be at least 3 characters'],
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      select: false,
+      minlength: [8, 'Password must be at least 8 characters'],
     },
     email: {
       type: String,
@@ -45,7 +39,6 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-    phoneVerified: { type: Boolean, default: false },
     emailVerified: { type: Boolean, default: false },
     role: {
       type: String,
@@ -55,14 +48,6 @@ const userSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     isBanned: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },
-    otp: {
-      code: String,
-      expiresAt: Date,
-      attempts: { type: Number, default: 0 },
-      requestCount: { type: Number, default: 0 },
-      lastRequestAt: Date,
-      lockedUntil: Date,
-    },
   },
   {
     timestamps: true,
@@ -71,7 +56,7 @@ const userSchema = new Schema<IUser>(
 
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
-  delete obj.otp;
+  delete obj.password;
   delete obj.refreshToken;
   delete obj.__v;
   return obj;

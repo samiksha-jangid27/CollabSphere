@@ -1,6 +1,7 @@
 // ABOUTME: Unit tests for ProfileService — uses a real in-memory DB but stubs Cloudinary.
 // ABOUTME: Covers one-per-user rule, completeness math, and not-found errors.
 
+import bcrypt from 'bcryptjs';
 import { setupTestDb, teardownTestDb, clearCollections } from '../helpers/testDb';
 import { User } from '@/models/User';
 import { ProfileRepository } from '@/modules/profile/profile.repository';
@@ -26,7 +27,8 @@ afterEach(async () => {
 });
 
 async function makeUser() {
-  return User.create({ phone: '+919876543210', role: 'creator' });
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  return User.create({ username: 'testuser', password: hashedPassword, role: 'creator' });
 }
 
 describe('ProfileService', () => {

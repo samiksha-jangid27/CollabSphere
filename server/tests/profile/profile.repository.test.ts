@@ -2,6 +2,7 @@
 // ABOUTME: Validates one-per-user enforcement and findByUserId lookup.
 
 import { Types } from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { setupTestDb, teardownTestDb, clearCollections } from '../helpers/testDb';
 import { ProfileRepository } from '@/modules/profile/profile.repository';
 import { User } from '@/models/User';
@@ -19,7 +20,8 @@ afterEach(async () => {
 });
 
 async function makeUser() {
-  return User.create({ phone: '+919876543210', role: 'creator' });
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  return User.create({ username: 'testuser', password: hashedPassword, role: 'creator' });
 }
 
 describe('ProfileRepository', () => {

@@ -1,9 +1,14 @@
 // ABOUTME: Rate limiting middleware using express-rate-limit — configurable per-route limiters.
-// ABOUTME: Default API limiter (100/15min) and stricter auth limiter (10/15min).
+// ABOUTME: Disabled in development mode (NODE_ENV=development). In production: 100/15min general, 10/15min auth.
 
 import rateLimit from 'express-rate-limit';
 
-export function createRateLimiter(windowMs: number, max: number) {
+function createRateLimiter(windowMs: number, max: number) {
+  // Skip rate limiting in development and test
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+    return (req: any, res: any, next: any) => next();
+  }
+
   return rateLimit({
     windowMs,
     max,

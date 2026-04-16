@@ -137,7 +137,7 @@ export default function ProfileByIdPage() {
               onSuccess={() => {
                 setShowRequestForm(false);
               }}
-              preselectedCreatorId={state.profile._id}
+              preselectedCreatorId={state.profile.userId}
             />
           </>
         );

@@ -1,5 +1,5 @@
 // ABOUTME: Auth state provider — manages user, token, loading, and authentication lifecycle.
-// ABOUTME: Silent refresh on mount; exposes login, logout, sendOtp via context.
+// ABOUTME: Silent refresh on mount; exposes register, login, logout via context.
 
 "use client";
 
@@ -11,8 +11,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  sendOtp: (phone: string) => Promise<{ isNewUser: boolean }>;
-  login: (phone: string, otp: string) => Promise<void>;
+  register: (username: string, password: string, role: "creator" | "brand", email?: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   sendEmailVerification: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -51,19 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init();
   }, [refreshUser]);
 
-  const sendOtp = useCallback(async (phone: string) => {
-    const response = await authService.sendOtp(phone);
-    return { isNewUser: response.data.isNewUser };
-  }, []);
-
-  const login = useCallback(
-    async (phone: string, otp: string) => {
-      const response = await authService.verifyOtp(phone, otp);
+  const register = useCallback(
+    async (username: string, password: string, role: "creator" | "brand", email?: string) => {
+      const response = await authService.register(username, password, role, email);
       setAccessToken(response.data.accessToken);
       setUser(response.data.user);
     },
     []
   );
+
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await authService.login(username, password);
+    setAccessToken(response.data.accessToken);
+    setUser(response.data.user);
+  }, []);
 
   const sendEmailVerification = useCallback(async (email: string) => {
     await authService.sendEmailVerification(email);
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
-        sendOtp,
+        register,
         login,
         sendEmailVerification,
         logout,

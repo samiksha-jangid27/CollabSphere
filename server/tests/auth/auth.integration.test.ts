@@ -1,5 +1,5 @@
 // ABOUTME: Integration tests for all auth endpoints — validates the full middleware+controller+service stack.
-// ABOUTME: Covers TC-1.1 through TC-1.11 from the test plan using Supertest and in-memory MongoDB.
+// ABOUTME: Covers register, login, email verification, token refresh, and logout with in-memory MongoDB.
 
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
@@ -23,64 +23,109 @@ afterEach(async () => {
   await clearCollections();
 });
 
-// Helper to create a user with an OTP and return the raw OTP code
-async function createUserWithOtp(phone: string): Promise<{ otpCode: string }> {
-  const otpCode = '123456';
-  const hashedOtp = await bcrypt.hash(otpCode, 10);
-
-  await User.create({
-    phone,
-    role: 'creator',
-    otp: {
-      code: hashedOtp,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      attempts: 0,
-      requestCount: 1,
-      lastRequestAt: new Date(),
-    },
+// Helper to create a user with hashed password
+async function createUser(username: string, password: string, role: 'creator' | 'brand' = 'creator') {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  return User.create({
+    username,
+    password: hashedPassword,
+    role,
+    email: `${username}@example.com`,
   });
-
-  return { otpCode };
 }
 
 describe('Auth Integration Tests', () => {
-  // TC-1.1: Send OTP to valid phone
-  it('TC-1.1: should send OTP to valid phone', async () => {
+  // Register success
+  it('TC-1.1: should register a new user successfully', async () => {
     const res = await request(app)
-      .post(`${API}/otp/send`)
-      .send({ phone: '+919876543210' });
+      .post(`${API}/register`)
+      .send({
+        username: 'testuser',
+        password: 'testpass123',
+        role: 'creator',
+        email: 'test@example.com',
+      });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.phone).toBe('+919876543210');
-    expect(res.body.data.isNewUser).toBe(true);
-    expect(res.body.message).toBe('OTP sent successfully');
+    expect(res.body.data.accessToken).toBeDefined();
+    expect(res.body.data.user).toBeDefined();
+    expect(res.body.data.user.username).toBe('testuser');
+    expect(res.body.data.user.role).toBe('creator');
+
+    // Check Set-Cookie header for refresh token
+    const cookies = res.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    const cookieStr = Array.isArray(cookies) ? cookies.join('; ') : cookies;
+    expect(cookieStr).toContain('refreshToken');
+    expect(cookieStr).toContain('HttpOnly');
   });
 
-  // TC-1.2: Send OTP to invalid phone
-  it('TC-1.2: should reject invalid phone format', async () => {
+  // Register duplicate username
+  it('TC-1.2: should reject register with duplicate username', async () => {
+    await createUser('testuser', 'password123');
+
     const res = await request(app)
-      .post(`${API}/otp/send`)
-      .send({ phone: 'abc123' });
+      .post(`${API}/register`)
+      .send({
+        username: 'testuser',
+        password: 'newpass123',
+        role: 'brand',
+      });
+
+    expect(res.status).toBe(409);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('USER_ALREADY_EXISTS');
+  });
+
+  // Register duplicate email
+  it('TC-1.2b: should reject register with duplicate email', async () => {
+    await createUser('existinguser', 'password123');
+
+    const res = await request(app)
+      .post(`${API}/register`)
+      .send({
+        username: 'newuser',
+        password: 'newpass123',
+        role: 'brand',
+        email: 'existinguser@example.com',
+      });
+
+    expect(res.status).toBe(409);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('EMAIL_ALREADY_EXISTS');
+  });
+
+  // Register missing fields
+  it('TC-1.3: should reject register with missing fields', async () => {
+    const res = await request(app)
+      .post(`${API}/register`)
+      .send({
+        username: 'testuser',
+        // missing password and role
+      });
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  // TC-1.3: Verify correct OTP
-  it('TC-1.3: should verify correct OTP and return tokens', async () => {
-    const { otpCode } = await createUserWithOtp('+919876543210');
+  // Login success
+  it('TC-1.4: should login with valid credentials', async () => {
+    await createUser('testuser', 'password123');
 
     const res = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({
+        username: 'testuser',
+        password: 'password123',
+      });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.accessToken).toBeDefined();
     expect(res.body.data.user).toBeDefined();
-    expect(res.body.data.user.phoneVerified).toBe(true);
+    expect(res.body.data.user.username).toBe('testuser');
 
     // Check Set-Cookie header
     const cookies = res.headers['set-cookie'];
@@ -90,72 +135,59 @@ describe('Auth Integration Tests', () => {
     expect(cookieStr).toContain('HttpOnly');
   });
 
-  // TC-1.4: Verify wrong OTP
-  it('TC-1.4: should reject incorrect OTP', async () => {
-    await createUserWithOtp('+919876543210');
+  // Login wrong password
+  it('TC-1.5: should reject login with wrong password', async () => {
+    await createUser('testuser', 'password123');
 
     const res = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: '000000' });
+      .post(`${API}/login`)
+      .send({
+        username: 'testuser',
+        password: 'wrongpassword',
+      });
 
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
-    expect(res.body.error.code).toBe('AUTH_INVALID_OTP');
+    expect(res.body.error.code).toBe('AUTH_INVALID_TOKEN');
   });
 
-  // TC-1.5: Verify expired OTP
-  it('TC-1.5: should reject expired OTP', async () => {
-    const otpCode = '123456';
-    const hashedOtp = await bcrypt.hash(otpCode, 10);
-
-    await User.create({
-      phone: '+919876543210',
-      role: 'creator',
-      otp: {
-        code: hashedOtp,
-        expiresAt: new Date(Date.now() - 1000), // expired
-        attempts: 0,
-        requestCount: 1,
-        lastRequestAt: new Date(),
-      },
-    });
-
+  // Login user not found
+  it('TC-1.6: should reject login with nonexistent user', async () => {
     const res = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({
+        username: 'nonexistent',
+        password: 'password123',
+      });
 
     expect(res.status).toBe(401);
-    expect(res.body.error.code).toBe('AUTH_OTP_EXPIRED');
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('AUTH_INVALID_TOKEN');
   });
 
-  // TC-1.6: Send email verification (authenticated)
-  it('TC-1.6: should send email verification when authenticated', async () => {
-    const { otpCode } = await createUserWithOtp('+919876543210');
+  // Send email verification (authenticated)
+  it('TC-1.7: should send email verification when authenticated', async () => {
+    const user = await createUser('testuser', 'password123');
 
-    // First login to get a token
     const loginRes = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({ username: 'testuser', password: 'password123' });
 
     const accessToken = loginRes.body.data.accessToken;
 
     const res = await request(app)
       .post(`${API}/email/send`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ email: 'test@example.com' });
+      .send({ email: 'newemail@example.com' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toBe('Verification email sent');
   });
 
-  // TC-1.7: Verify email with valid token
-  it('TC-1.7: should verify email with valid token', async () => {
-    const user = await User.create({
-      phone: '+919876543210',
-      email: 'test@example.com',
-      role: 'creator',
-    });
+  // Verify email with valid token
+  it('TC-1.8: should verify email with valid token', async () => {
+    const user = await createUser('testuser', 'password123');
 
     const emailToken = tokenService.generateEmailToken({
       userId: user._id.toString(),
@@ -169,8 +201,8 @@ describe('Auth Integration Tests', () => {
     expect(res.body.data.emailVerified).toBe(true);
   });
 
-  // TC-1.8: Access /me without token
-  it('TC-1.8: should reject access to /me without token', async () => {
+  // Access /me without token
+  it('TC-1.9: should reject access to /me without token', async () => {
     const res = await request(app).get(`${API}/me`);
 
     expect(res.status).toBe(401);
@@ -178,13 +210,13 @@ describe('Auth Integration Tests', () => {
     expect(res.body.error.code).toBe('AUTH_INVALID_TOKEN');
   });
 
-  // TC-1.9: Access /me with valid token
-  it('TC-1.9: should return user data with valid token', async () => {
-    const { otpCode } = await createUserWithOtp('+919876543210');
+  // Access /me with valid token
+  it('TC-1.10: should return user data with valid token', async () => {
+    await createUser('testuser', 'password123');
 
     const loginRes = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({ username: 'testuser', password: 'password123' });
 
     const accessToken = loginRes.body.data.accessToken;
 
@@ -194,16 +226,16 @@ describe('Auth Integration Tests', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.user.phone).toBe('+919876543210');
+    expect(res.body.data.user.username).toBe('testuser');
   });
 
-  // TC-1.10: Refresh token rotation
-  it('TC-1.10: should refresh tokens with valid cookie', async () => {
-    const { otpCode } = await createUserWithOtp('+919876543210');
+  // Refresh token rotation
+  it('TC-1.11: should refresh tokens with valid cookie', async () => {
+    await createUser('testuser', 'password123');
 
     const loginRes = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({ username: 'testuser', password: 'password123' });
 
     // Extract refresh token cookie
     const cookies = loginRes.headers['set-cookie'];
@@ -222,13 +254,13 @@ describe('Auth Integration Tests', () => {
     expect(newCookies).toBeDefined();
   });
 
-  // TC-1.11: Logout
-  it('TC-1.11: should logout and clear cookie', async () => {
-    const { otpCode } = await createUserWithOtp('+919876543210');
+  // Logout
+  it('TC-1.12: should logout and clear cookie', async () => {
+    await createUser('testuser', 'password123');
 
     const loginRes = await request(app)
-      .post(`${API}/otp/verify`)
-      .send({ phone: '+919876543210', otp: otpCode });
+      .post(`${API}/login`)
+      .send({ username: 'testuser', password: 'password123' });
 
     const accessToken = loginRes.body.data.accessToken;
 

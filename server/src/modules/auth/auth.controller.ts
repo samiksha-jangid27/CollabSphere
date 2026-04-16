@@ -9,27 +9,37 @@ import { HTTP_STATUS } from '../../shared/constants';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  sendOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { phone } = req.body;
-      const result = await this.authService.sendOtp(phone);
-      sendSuccess(res, { phone, isNewUser: result.isNewUser }, result.message);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  verifyOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { phone, otp } = req.body;
-      const result = await this.authService.verifyOtp(phone, otp);
+      const { username, password, role, email } = req.body;
+      const result = await this.authService.register(username, password, role, email);
 
       // Set refresh token as HTTP-only cookie
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        path: '/api/v1/auth',
+        path: '/api/v1',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      sendSuccess(res, { accessToken: result.accessToken, user: result.user }, 'Registration successful');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { username, password } = req.body;
+      const result = await this.authService.login(username, password);
+
+      // Set refresh token as HTTP-only cookie
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/v1',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
@@ -76,7 +86,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        path: '/api/v1/auth',
+        path: '/api/v1',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -94,7 +104,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        path: '/api/v1/auth',
+        path: '/api/v1',
       });
 
       sendSuccess(res, null, 'Logged out successfully');
