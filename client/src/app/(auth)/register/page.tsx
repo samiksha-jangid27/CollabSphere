@@ -67,7 +67,7 @@ export default function RegisterPage() {
     try {
       await register(username, password, role, email);
       toast.success("Account created! Redirecting...");
-      router.push("/verify");
+      router.push("/profile/me/edit");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Registration failed");
       toast.error(message);
