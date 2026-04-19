@@ -1,10 +1,25 @@
 // ABOUTME: Auth HTTP controller — handles request/response for all authentication endpoints.
 // ABOUTME: Delegates business logic to AuthService; uses sendSuccess for consistent responses.
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, CookieOptions } from 'express';
 import { AuthService } from './auth.service';
 import { sendSuccess } from '../../shared/responseHelper';
 import { HTTP_STATUS } from '../../shared/constants';
+import { config } from '../../config/environment';
+
+// Cross-site cookie in prod (Vercel client, separate API origin) requires
+// SameSite=None + Secure. In dev we keep SameSite=Strict on a same-origin setup.
+const refreshCookieBase: CookieOptions = {
+  httpOnly: true,
+  secure: config.isProd,
+  sameSite: config.isProd ? 'none' : 'strict',
+  path: '/api/v1',
+};
+
+const refreshCookieOptions: CookieOptions = {
+  ...refreshCookieBase,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -15,13 +30,7 @@ export class AuthController {
       const result = await this.authService.register(username, password, role, email);
 
       // Set refresh token as HTTP-only cookie
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/v1',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
 
       sendSuccess(res, { accessToken: result.accessToken, user: result.user }, 'Registration successful');
     } catch (error) {
@@ -35,13 +44,7 @@ export class AuthController {
       const result = await this.authService.login(username, password);
 
       // Set refresh token as HTTP-only cookie
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/v1',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
 
       sendSuccess(res, { accessToken: result.accessToken, user: result.user }, 'Login successful');
     } catch (error) {
@@ -82,13 +85,7 @@ export class AuthController {
 
       const result = await this.authService.refreshTokens(currentToken);
 
-      res.cookie('refreshToken', result.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/v1',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
 
       sendSuccess(res, { accessToken: result.accessToken }, 'Token refreshed');
     } catch (error) {
@@ -100,12 +97,7 @@ export class AuthController {
     try {
       await this.authService.logout(req.user!.userId);
 
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/v1',
-      });
+      res.clearCookie('refreshToken', refreshCookieBase);
 
       sendSuccess(res, null, 'Logged out successfully');
     } catch (error) {

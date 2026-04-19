@@ -23,6 +23,12 @@ import { MessagingRepository } from './modules/messaging/messaging.repository';
 import logger from './shared/logger';
 
 const app = express();
+
+// Trust the first proxy (Render, Vercel, etc.) so req.secure, req.ip, and
+// the rate limiter all see the real client IP and protocol. Required for
+// Secure cookies to be set behind a TLS-terminating load balancer.
+app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
 setupSocketServer(httpServer);
 
