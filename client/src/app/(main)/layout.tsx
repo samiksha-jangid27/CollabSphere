@@ -9,6 +9,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { fadeUp } from "@/lib/motion";
+import MessageNotifier from "@/components/messaging/MessageNotifier";
 
 type NavItem = {
   label: string;
@@ -36,9 +37,8 @@ const NAV_ITEMS: ReadonlyArray<Omit<NavItem, "active">> = [
   },
   {
     label: "Messages",
-    href: "#",
-    match: () => false,
-    soon: true,
+    href: "/messages",
+    match: (pathname) => pathname.startsWith("/messages"),
   },
 ];
 
@@ -182,6 +182,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <hr className="rule-line-subtle" />
         <div style={{ height: "48px" }} />
       </footer>
+
+      <MessageNotifier />
     </div>
   );
 }

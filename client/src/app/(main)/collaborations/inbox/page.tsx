@@ -4,17 +4,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { RequestList } from '@/components/collaboration/RequestList';
 import { useCollaboration } from '@/hooks/useCollaboration';
+import { messagingService } from '@/services/messagingService';
 import { staggerContainer, fadeUp } from '@/lib/motion';
 
 const STATUS_OPTIONS = ['', 'Open', 'Accepted', 'Declined', 'Closed'];
 
 export default function InboxPage() {
+  const router = useRouter();
   const { requests, pagination, loading, getInbox, acceptRequest, declineRequest } = useCollaboration();
   const [status, setStatus] = useState<string>('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [messagingRequestId, setMessagingRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     getInbox(1, status || undefined);
@@ -27,9 +31,22 @@ export default function InboxPage() {
   const handleAccept = async (id: string) => {
     setActionLoading(true);
     try {
-      await acceptRequest(id);
+      const result = await acceptRequest(id);
+      if (result.conversationId) {
+        router.push(`/messages?conversation=${result.conversationId}`);
+      }
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleStartMessage = async (id: string) => {
+    setMessagingRequestId(id);
+    try {
+      const conversation = await messagingService.getOrCreateByCollab(id);
+      router.push(`/messages?conversation=${conversation._id}`);
+    } finally {
+      setMessagingRequestId(null);
     }
   };
 
@@ -161,8 +178,10 @@ export default function InboxPage() {
           showActions={true}
           onAccept={handleAccept}
           onDecline={handleDecline}
+          onStartMessage={handleStartMessage}
           onPageChange={handlePageChange}
           actionLoading={actionLoading}
+          messagingRequestId={messagingRequestId}
         />
       </motion.div>
     </motion.div>

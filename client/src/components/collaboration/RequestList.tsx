@@ -21,8 +21,10 @@ interface RequestListProps {
   showActions?: boolean;
   onAccept?: (id: string) => void;
   onDecline?: (id: string) => void;
+  onStartMessage?: (id: string) => void;
   onPageChange?: (page: number) => void;
   actionLoading?: boolean;
+  messagingRequestId?: string | null;
 }
 
 function SkeletonCard() {
@@ -102,8 +104,10 @@ export function RequestList({
   showActions = false,
   onAccept,
   onDecline,
+  onStartMessage,
   onPageChange,
   actionLoading = false,
+  messagingRequestId = null,
 }: RequestListProps) {
   if (isLoading) {
     return (
@@ -192,7 +196,9 @@ export function RequestList({
             showActions={showActions}
             onAccept={onAccept}
             onDecline={onDecline}
+            onStartMessage={onStartMessage}
             isLoading={actionLoading}
+            isStartingMessage={messagingRequestId === request._id}
           />
         ))}
       </motion.div>

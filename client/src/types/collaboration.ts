@@ -14,6 +14,11 @@ export interface CollaborationRequest {
   updatedAt: string;
 }
 
+export interface AcceptRequestResult {
+  collaboration: CollaborationRequest;
+  conversationId?: string;
+}
+
 export interface CreateCollaborationInput {
   recipientId: string; // creator profile id
   title: string;

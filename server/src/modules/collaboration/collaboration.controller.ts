@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ICollaborationService } from './collaboration.interfaces';
 import { sendSuccess } from '../../shared/responseHelper';
 import { HTTP_STATUS } from '../../shared/constants';
+import { Conversation } from '../../models/Conversation';
 
 export class CollaborationController {
   constructor(private readonly service: ICollaborationService) {}
@@ -39,7 +40,17 @@ export class CollaborationController {
   acceptRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const collab = await this.service.acceptRequest(req.params.id as string, req.user!.userId);
-      sendSuccess(res, { collaboration: collab }, 'Request accepted');
+
+      // Look up the conversation created by the EventBus listener
+      const conversation = await Conversation.findOne({
+        collaborationRequestId: collab._id,
+      });
+
+      sendSuccess(
+        res,
+        { collaboration: collab, conversationId: conversation?._id?.toString() },
+        'Request accepted',
+      );
     } catch (err) {
       next(err);
     }

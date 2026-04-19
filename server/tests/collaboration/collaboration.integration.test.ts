@@ -8,6 +8,7 @@ import { app } from '@/index';
 import { User } from '@/models/User';
 import { TokenService } from '@/modules/auth/token.service';
 import { CollaborationRequest } from '@/models/CollaborationRequest';
+import { Conversation } from '@/models/Conversation';
 
 const tokenService = new TokenService();
 
@@ -363,6 +364,58 @@ describe('PATCH /api/v1/collaborations/:id/accept', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
+  });
+
+  it('creates a conversation and returns conversationId on accept', async () => {
+    const req = await CollaborationRequest.create({
+      userId: creatorId,
+      brandId: brandId,
+      title: 'Test',
+      description: 'Desc',
+      budget: 10000,
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      status: 'Open',
+    });
+
+    const res = await request(app)
+      .patch(`/api/v1/collaborations/${req._id.toString()}/accept`)
+      .set('Authorization', `Bearer ${creatorToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.collaboration.status).toBe('Accepted');
+    expect(res.body.data.conversationId).toBeDefined();
+
+    // Verify conversation exists in DB
+    const conversation = await Conversation.findById(res.body.data.conversationId);
+    expect(conversation).toBeDefined();
+    expect(conversation!.participants.map(String)).toContain(creatorId);
+    expect(conversation!.participants.map(String)).toContain(brandId);
+    expect(conversation!.collaborationRequestId.toString()).toBe(req._id.toString());
+  });
+
+  it('does not create duplicate conversation if accept is retried', async () => {
+    const req = await CollaborationRequest.create({
+      userId: creatorId,
+      brandId: brandId,
+      title: 'Test',
+      description: 'Desc',
+      budget: 10000,
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      status: 'Open',
+    });
+
+    // First accept
+    await request(app)
+      .patch(`/api/v1/collaborations/${req._id.toString()}/accept`)
+      .set('Authorization', `Bearer ${creatorToken}`);
+
+    // Count conversations
+    const count = await Conversation.countDocuments({
+      collaborationRequestId: req._id,
+    });
+
+    expect(count).toBe(1);
   });
 });
 

@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { collaborationService } from '@/services/collaborationService';
-import type { CollaborationRequest, CreateCollaborationInput, PaginatedResponse } from '@/types/collaboration';
+import type { CollaborationRequest, CreateCollaborationInput, PaginatedResponse, AcceptRequestResult } from '@/types/collaboration';
 
 interface UseCollaborationState {
   requests: CollaborationRequest[];
@@ -106,7 +106,7 @@ export function useCollaboration() {
   );
 
   const acceptRequest = useCallback(
-    async (id: string): Promise<CollaborationRequest> => {
+    async (id: string): Promise<AcceptRequestResult> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const result = await collaborationService.acceptRequest(id);

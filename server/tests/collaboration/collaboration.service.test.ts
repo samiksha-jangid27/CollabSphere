@@ -8,6 +8,7 @@ import { CollaborationRequest } from '@/models/CollaborationRequest';
 import { CollaborationRepository } from '@/modules/collaboration/collaboration.repository';
 import { CollaborationService } from '@/modules/collaboration/collaboration.service';
 import { AppError, ERROR_CODES } from '@/shared/errors';
+import { eventBus, APP_EVENTS } from '@/shared/EventBus';
 
 const repo = new CollaborationRepository();
 const service = new CollaborationService(repo);
@@ -287,6 +288,30 @@ describe('CollaborationService', () => {
       await expect(service.acceptRequest(request._id.toString(), creatorUser._id.toString())).rejects.toMatchObject({
         code: ERROR_CODES.COLLAB_INVALID_STATUS_TRANSITION,
       });
+    });
+
+    it('emits COLLAB_ACCEPTED event with correct payload', async () => {
+      const emitSpy = jest.spyOn(eventBus, 'emit');
+
+      const request = await CollaborationRequest.create({
+        userId: creatorUser._id,
+        brandId: brandUser._id,
+        title: 'Test',
+        description: 'Desc',
+        budget: 10000,
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        status: 'Open',
+      });
+
+      await service.acceptRequest(request._id.toString(), creatorUser._id.toString());
+
+      expect(emitSpy).toHaveBeenCalledWith(APP_EVENTS.COLLAB_ACCEPTED, {
+        collabRequestId: request._id.toString(),
+        creatorId: creatorUser._id.toString(),
+        brandId: brandUser._id.toString(),
+      });
+
+      emitSpy.mockRestore();
     });
   });
 

@@ -13,7 +13,9 @@ interface RequestCardProps {
   showActions?: boolean; // True if user is the recipient (creator)
   onAccept?: (id: string) => void;
   onDecline?: (id: string) => void;
+  onStartMessage?: (id: string) => void;
   isLoading?: boolean;
+  isStartingMessage?: boolean;
 }
 
 function getStatusColor(status: string): string {
@@ -38,7 +40,9 @@ export function RequestCard({
   showActions = false,
   onAccept,
   onDecline,
+  onStartMessage,
   isLoading = false,
+  isStartingMessage = false,
 }: RequestCardProps) {
   const deadline = new Date(request.deadline);
   const deadlineStr = deadline.toLocaleDateString('en-US', {
@@ -196,12 +200,13 @@ export function RequestCard({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        {showActions && (
+        {/* Action Buttons — only for Open requests */}
+        {showActions && request.status === 'Open' && (
           <div
             style={{
               display: 'flex',
               gap: 8,
+              marginBottom: 8,
             }}
           >
             <Button
@@ -223,6 +228,18 @@ export function RequestCard({
               Decline
             </Button>
           </div>
+        )}
+
+        {onStartMessage && (
+          <Button
+            variant="secondary"
+            size="sm"
+            isLoading={isStartingMessage}
+            onClick={() => onStartMessage(request._id)}
+            style={{ width: '100%' }}
+          >
+            Start message
+          </Button>
         )}
       </div>
     </motion.article>

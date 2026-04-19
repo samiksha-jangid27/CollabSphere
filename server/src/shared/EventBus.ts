@@ -7,6 +7,7 @@ export const APP_EVENTS = {
   USER_REGISTERED: 'user.registered',
   EMAIL_VERIFIED: 'email.verified',
   OTP_SENT: 'otp.sent',
+  COLLAB_ACCEPTED: 'collab.accepted',
 } as const;
 
 class EventBus {

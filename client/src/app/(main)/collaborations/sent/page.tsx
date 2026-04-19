@@ -4,16 +4,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { RequestList } from '@/components/collaboration/RequestList';
 import { useCollaboration } from '@/hooks/useCollaboration';
+import { messagingService } from '@/services/messagingService';
 import { staggerContainer, fadeUp } from '@/lib/motion';
 
 const STATUS_OPTIONS = ['', 'Open', 'Pending', 'Accepted', 'Declined', 'Closed'];
 
 export default function SentPage() {
+  const router = useRouter();
   const { requests, pagination, loading, getSent } = useCollaboration();
   const [status, setStatus] = useState<string>('');
+  const [messagingRequestId, setMessagingRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     getSent(1, status || undefined);
@@ -21,6 +25,16 @@ export default function SentPage() {
 
   const handlePageChange = (page: number) => {
     getSent(page, status || undefined);
+  };
+
+  const handleStartMessage = async (id: string) => {
+    setMessagingRequestId(id);
+    try {
+      const conversation = await messagingService.getOrCreateByCollab(id);
+      router.push(`/messages?conversation=${conversation._id}`);
+    } finally {
+      setMessagingRequestId(null);
+    }
   };
 
   return (
@@ -140,7 +154,9 @@ export default function SentPage() {
           pagination={pagination}
           isLoading={loading}
           showActions={false}
+          onStartMessage={handleStartMessage}
           onPageChange={handlePageChange}
+          messagingRequestId={messagingRequestId}
         />
       </motion.div>
     </motion.div>

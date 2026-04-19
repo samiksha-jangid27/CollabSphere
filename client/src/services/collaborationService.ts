@@ -2,7 +2,7 @@
 // ABOUTME: Follows the same named-export object pattern as profileService.ts and searchService.ts.
 
 import api from './api';
-import type { CollaborationRequest, CreateCollaborationInput, PaginatedResponse } from '@/types/collaboration';
+import type { CollaborationRequest, CreateCollaborationInput, PaginatedResponse, AcceptRequestResult } from '@/types/collaboration';
 
 export const collaborationService = {
   async createRequest(data: CreateCollaborationInput): Promise<CollaborationRequest> {
@@ -24,9 +24,9 @@ export const collaborationService = {
     return data.data;
   },
 
-  async acceptRequest(id: string): Promise<CollaborationRequest> {
+  async acceptRequest(id: string): Promise<AcceptRequestResult> {
     const { data } = await api.patch(`/collaborations/${id}/accept`);
-    return data.data.collaboration;
+    return { collaboration: data.data.collaboration, conversationId: data.data.conversationId };
   },
 
   async declineRequest(id: string): Promise<CollaborationRequest> {

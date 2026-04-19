@@ -3,6 +3,7 @@
 
 import { ICollaborationRequest } from '../../models/CollaborationRequest';
 import { AppError, ERROR_CODES } from '../../shared/errors';
+import { eventBus, APP_EVENTS } from '../../shared/EventBus';
 import {
   ICollaborationService,
   ICollaborationRepository,
@@ -93,6 +94,12 @@ export class CollaborationService implements ICollaborationService {
     if (!updated) {
       throw AppError.internal('Failed to update request');
     }
+
+    await eventBus.emit(APP_EVENTS.COLLAB_ACCEPTED, {
+      collabRequestId: requestId,
+      creatorId: request.userId.toString(),
+      brandId: request.brandId.toString(),
+    });
 
     return updated;
   }
