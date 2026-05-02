@@ -1,16 +1,33 @@
 sequenceDiagram
     autonumber
     actor User
-    participant FE as Frontend
+    participant FE as Frontend (Discover)
     participant BE as Backend
     participant DB as MongoDB
+    participant Nominatim
 
-    User->>FE: set filters
-    User->>FE: set location
-    FE->>BE: GET /search/nearby?lat&lng&radius
-    BE->>DB: $near query (2dsphere)
-    DB-->>BE: matching profiles
-    BE->>BE: apply niche/platform filters
-    BE->>BE: paginate results
+    Note over User,FE: City autocomplete
+
+    User->>FE: type city name
+    FE->>BE: GET /api/v1/search/cities?q=...
+    BE->>DB: distinct location.city (regex match)
+    DB-->>BE: city suggestions
+    BE-->>FE: cities[]
+
+    Note over User,FE: Optional address geocoding
+
+    User->>FE: enter address
+    FE->>BE: GET /api/v1/geocode?q=...
+    BE->>Nominatim: forward query (rate-limited proxy)
+    Nominatim-->>BE: address candidates with lat/lng
+    BE-->>FE: results[]
+
+    Note over User,FE: Profile search
+
+    User->>FE: pick city + niche + platform filters
+    FE->>BE: GET /api/v1/search/profiles?city&niche&platform
+    BE->>BE: validate filters (Zod)
+    BE->>DB: find profiles where location.city, niche, socialAccounts.platform match
+    DB-->>BE: matching profiles (limit 20)
     BE-->>FE: profiles[]
-    FE-->>User: render cards
+    FE-->>User: render ProfileGrid cards

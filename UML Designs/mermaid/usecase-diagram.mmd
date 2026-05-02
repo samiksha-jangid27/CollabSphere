@@ -1,55 +1,46 @@
 flowchart LR
     Creator([Creator / Influencer])
     Brand([Brand])
-    Admin([Admin / Moderator])
 
     subgraph System[CollabSphere System]
         direction TB
 
         subgraph Onboarding[Onboarding & Profile]
-            UC1((Sign Up with Phone OTP))
-            UC2((Verify Email))
-            UC3((Create Profile))
-            UC4((Edit Profile))
-            UC5((Link Social Accounts))
-            UC6((Submit Verification Request))
+            UC1((Register with Username and Password))
+            UC2((Login))
+            UC3((Verify Email))
+            UC4((Create Profile))
+            UC5((Edit Profile))
+            UC6((Upload Avatar and Cover))
         end
 
         subgraph Discovery[Discovery & Search]
-            UC7((Search Creators))
-            UC8((Filter Search Results))
-            UC9((View Creator Profiles))
-            UC10((Bookmark Profiles))
+            UC7((Search Profiles by City, Niche, Platform))
+            UC8((Autocomplete Cities))
+            UC9((Geocode Address via Nominatim))
+            UC10((View Creator Profile))
         end
 
         subgraph Interaction[Interaction & Collaboration]
             UC11((Send Collaboration Request))
-            UC12((Accept/Reject Request))
-            UC13((Send Messages))
-            UC14((View Messages))
+            UC12((View Inbox of Requests))
+            UC13((View Sent Requests))
+            UC14((Accept Request))
+            UC15((Decline Request))
         end
 
-        subgraph BrandOps[Brand Operations]
-            UC15((Post Collaboration Opportunity))
-            UC16((Browse Applicants))
-            UC17((Manage Campaign Requests))
-        end
-
-        subgraph Admin_[Moderation & Administration]
-            UC18((Moderate Reported Content))
-            UC19((View Platform Statistics))
-            UC20((Ban/Suspend Users))
-            UC21((Review Verification Requests))
-            UC22((Approve/Reject Profiles))
-            UC23((Manage Duplicate Accounts))
+        subgraph Messaging[Messaging]
+            UC16((List Conversations))
+            UC17((Send Message))
+            UC18((Read Messages))
         end
 
         subgraph Internal[System Services - Internal]
-            UC24((Send OTP via SMS))
-            UC25((Send Email Verification Link))
-            UC26((Validate JWT Tokens))
-            UC27((Execute Geospatial Queries))
-            UC28((Deliver Real-Time Messages))
+            UC19((Send Email Verification Link))
+            UC20((Issue and Refresh JWT Tokens))
+            UC21((Auto-create Conversation on Accept))
+            UC22((Deliver Real-Time Messages via Socket.io))
+            UC23((Upload Media to Cloudinary))
         end
     end
 
@@ -59,33 +50,33 @@ flowchart LR
     Creator --- UC4
     Creator --- UC5
     Creator --- UC6
-    Creator --- UC7
-    Creator --- UC8
-    Creator --- UC9
     Creator --- UC10
-    Creator --- UC11
     Creator --- UC12
-    Creator --- UC13
     Creator --- UC14
+    Creator --- UC15
+    Creator --- UC16
+    Creator --- UC17
+    Creator --- UC18
 
+    Brand --- UC1
+    Brand --- UC2
+    Brand --- UC3
+    Brand --- UC4
+    Brand --- UC5
+    Brand --- UC6
     Brand --- UC7
+    Brand --- UC8
     Brand --- UC9
+    Brand --- UC10
     Brand --- UC11
     Brand --- UC13
-    Brand --- UC14
-    Brand --- UC15
     Brand --- UC16
     Brand --- UC17
+    Brand --- UC18
 
-    Admin --- UC18
-    Admin --- UC19
-    Admin --- UC20
-    Admin --- UC21
-    Admin --- UC22
-    Admin --- UC23
-
-    UC1 -. include .-> UC24
-    UC2 -. include .-> UC25
-    UC11 -. include .-> UC28
-    UC13 -. include .-> UC28
-    UC7 -. include .-> UC27
+    UC3 -. include .-> UC19
+    UC1 -. include .-> UC20
+    UC2 -. include .-> UC20
+    UC14 -. include .-> UC21
+    UC17 -. include .-> UC22
+    UC6 -. include .-> UC23

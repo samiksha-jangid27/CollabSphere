@@ -1,67 +1,66 @@
 erDiagram
     USER ||--|| PROFILE : has
     USER {
-        string phone
+        ObjectId _id
+        string username
+        string password
         string email
+        boolean emailVerified
         string role
-        boolean verified
+        boolean isActive
+        boolean isBanned
+        string refreshToken
+        date createdAt
+        date updatedAt
     }
-    PROFILE ||--o{ SOCIAL_ACCOUNT : links
-    PROFILE ||--o{ MEDIA_POST : owns
     PROFILE {
-        string name
+        ObjectId _id
+        ObjectId userId
+        string displayName
         string bio
-        string niche
-        string location
-        boolean verified
-    }
-    SOCIAL_ACCOUNT {
-        string platform
-        string handle
+        string avatar
+        string coverImage
+        array niche
+        array interests
+        array contentTypes
+        object collaborationPreferences
+        object contactInfo
+        object location
         boolean isVerified
-        string oauthData
-    }
-    MEDIA_POST {
-        string type
-        string url
-        string caption
-        string tags
+        date verifiedAt
+        number followerCount
+        number profileCompleteness
     }
 
-    USER ||--o{ COLLABORATION_REQUEST : sends
+    USER ||--o{ COLLABORATION_REQUEST : sends_as_brand
+    USER ||--o{ COLLABORATION_REQUEST : receives_as_creator
     COLLABORATION_REQUEST {
+        ObjectId _id
+        ObjectId userId
+        ObjectId brandId
         string title
         string description
-        string status
-        string type
-        string location
         number budget
+        date deadline
+        string status
+        date createdAt
+        date updatedAt
     }
 
-    USER ||--o{ CONVERSATION : participates
+    COLLABORATION_REQUEST ||--o| CONVERSATION : opens_on_accept
+    USER }o--o{ CONVERSATION : participates
     CONVERSATION ||--o{ MESSAGE : contains
     CONVERSATION {
-        string participants
-        string collabReqId
+        ObjectId _id
+        array participants
+        ObjectId collaborationRequestId
+        date lastMessageAt
     }
     MESSAGE {
+        ObjectId _id
+        ObjectId conversationId
+        ObjectId senderId
         string content
-        string sender
-    }
-
-    USER ||--o{ BOOKMARK : saves
-    BOOKMARK {
-        string profileId
-    }
-
-    USER ||--o{ VERIFICATION_REQUEST : submits
-    VERIFICATION_REQUEST {
-        string status
-        string evidence
-    }
-
-    USER ||--o{ REPORT : files
-    REPORT {
-        string targetType
-        string reason
+        date readAt
+        date createdAt
     }

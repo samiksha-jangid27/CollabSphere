@@ -1,26 +1,43 @@
 sequenceDiagram
     autonumber
-    actor Sender
-    participant SFE as Frontend (Sender)
+    actor Brand
+    participant BFE as Frontend (Brand)
     participant BE as Backend
     participant DB as MongoDB
-    actor Receiver
-    participant RFE as Frontend (Receiver)
+    participant Bus as EventBus
+    participant Msg as MessagingService
+    actor Creator
+    participant CFE as Frontend (Creator)
 
-    Sender->>SFE: create collab
-    SFE->>BE: POST /collaborations
-    BE->>BE: validate sender
-    BE->>DB: create record
+    Brand->>BFE: open creator profile, click Send Request
+    BFE->>BE: POST /api/v1/collaborations
+    BE->>BE: authenticate + authorize role=brand
+    BE->>BE: validate input (Zod)
+    BE->>DB: insert CollaborationRequest (status=Pending)
     DB-->>BE: request record
-    BE->>BE: emit(collab.created) [Observer]
-    BE->>Receiver: notify receiver (Socket)
-    BE-->>SFE: 201 Created
+    BE-->>BFE: 201 Created
 
-    Note over Receiver,RFE: Receiver views request
+    Note over Creator,CFE: Creator opens inbox
 
-    Receiver->>RFE: open request
-    RFE->>BE: PATCH /collaborations/:id/status
-    BE->>DB: update status = "accepted"
-    BE->>BE: emit(collab.accepted)
-    BE->>DB: create conversation
-    BE-->>RFE: 200 OK
+    Creator->>CFE: open Inbox
+    CFE->>BE: GET /api/v1/collaborations/inbox?page=1
+    BE->>DB: find by userId, paginate
+    DB-->>BE: requests + total
+    BE-->>CFE: { data, pagination }
+
+    alt Creator accepts
+        Creator->>CFE: click Accept
+        CFE->>BE: PATCH /api/v1/collaborations/:id/accept
+        BE->>BE: verify recipient = current user
+        BE->>DB: set status=Accepted
+        BE->>Bus: emit COLLAB_ACCEPTED
+        Bus->>Msg: handler: ensureConversation([brand, creator], requestId)
+        Msg->>DB: upsert Conversation
+        BE-->>CFE: 200 OK (request, conversationId)
+    else Creator declines
+        Creator->>CFE: click Decline
+        CFE->>BE: PATCH /api/v1/collaborations/:id/decline
+        BE->>BE: verify recipient = current user
+        BE->>DB: set status=Declined
+        BE-->>CFE: 200 OK (request)
+    end

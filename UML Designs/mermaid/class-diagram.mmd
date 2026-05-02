@@ -1,87 +1,187 @@
 classDiagram
-    class UserController {
-        +requestOtp(req, res) Object
-        +verifyOtp(req, res) Object
-        +requestLoginOtp(req, res) Object
-    }
-
-    class UserService {
-        -users: List
-        +registerUser(phone, email) Object
-        +authenticateUser(identifier, otp) Object
-        +deactivateUser(userId) Boolean
+    class AuthController {
+        +register(req, res) Object
+        +login(req, res) Object
+        +sendEmailVerification(req, res) Object
+        +verifyEmail(req, res) Object
+        +refresh(req, res) Object
+        +logout(req, res) Object
+        +me(req, res) Object
     }
 
     class AuthService {
-        +generateToken(userId) String
-        +verifyToken(token) Boolean
-        +refreshAccessToken(token) String
+        -userRepo: UserRepository
+        -tokenService: TokenService
+        -emailProvider: EmailProvider
+        +register(data) Object
+        +login(username, password) Object
+        +sendEmailVerification(userId) void
+        +verifyEmail(token) Object
+        +refreshTokens(refreshToken) Object
+        +logout(userId) void
     }
 
-    class CollaborationRequestController {
-        +sendRequest(req, res) Object
-        +respondToRequest(req, res) Object
-        +listRequests(userId, action) Object
+    class TokenService {
+        +generateAccessToken(payload) String
+        +generateRefreshToken(payload) String
+        +generateEmailToken(payload) String
+        +verifyAccessToken(token) Payload
+        +verifyRefreshToken(token) Payload
+        +verifyEmailToken(token) Payload
     }
 
-    class ConversationService {
-        -conversations: List
-        +createConversation(participants) Object
-        +addMessage(conversationId, message) Object
-        +listConversations(userId) List
+    class ProfileController {
+        +createProfile(req, res) Object
+        +getMyProfile(req, res) Object
+        +updateMyProfile(req, res) Object
+        +deleteMyProfile(req, res) Object
+        +uploadAvatar(req, res) Object
+        +uploadCover(req, res) Object
+        +getProfileById(req, res) Object
     }
 
     class ProfileService {
-        -profiles: List
+        -profileRepo: ProfileRepository
         +createProfile(userId, data) Profile
-        +updateProfile(profileId, data) Profile
-        +getProfile(profileId) Profile
-        +verifyProfile(profileId, level) Boolean
+        +getMyProfile(userId) Profile
+        +updateProfile(userId, data) Profile
+        +deleteProfile(userId) Boolean
+        +uploadAvatar(userId, file) Profile
+        +uploadCover(userId, file) Profile
+        +getProfileById(id) Profile
+        +calculateCompleteness(profile) Number
     }
 
-    class VerificationService {
-        -verificationRequests: List
-        +submitVerification(userId, evidence) Object
-        +reviewVerification(requestId, decision) Object
+    class SearchController {
+        +searchProfiles(req, res) Object
+        +searchCities(req, res) Object
+    }
+
+    class SearchService {
+        -searchRepo: SearchRepository
+        +searchProfiles(filters) List
+        +searchCities(query) List
+    }
+
+    class GeocodeController {
+        +search(req, res) Object
+    }
+
+    class GeocodeService {
+        +search(query) List
+    }
+
+    class CollaborationController {
+        +createRequest(req, res) Object
+        +getInbox(req, res) Object
+        +getSent(req, res) Object
+        +acceptRequest(req, res) Object
+        +declineRequest(req, res) Object
     }
 
     class CollaborationService {
-        -requests: List
-        +createRequest(senderId, data) Object
-        +acceptRequest(requestId) Object
-        +rejectRequest(requestId) Object
-        +listByStatus(userId, status) List
+        -collabRepo: CollaborationRepository
+        +createRequest(brandId, data) CollaborationRequest
+        +getInbox(userId, filters) Page
+        +getSent(brandId, filters) Page
+        +acceptRequest(requestId, userId) CollaborationRequest
+        +declineRequest(requestId, userId) CollaborationRequest
+    }
+
+    class MessagingController {
+        +listConversations(req, res) Object
+        +getMessages(req, res) Object
+        +sendMessage(req, res) Object
+    }
+
+    class MessagingService {
+        -messagingRepo: MessagingRepository
+        +listConversations(userId) List
+        +getMessages(conversationId, userId) List
+        +sendMessage(conversationId, senderId, content) Message
+        +ensureConversation(participants, collabId) Conversation
+        +subscribeToEvents(service) void
+    }
+
+    class BaseRepository~T~ {
+        <<abstract>>
+        #model: Model~T~
+        +findById(id) T
+        +findOne(filter) T
+        +find(filter) List
+        +create(data) T
+        +updateById(id, data) T
+        +deleteById(id) Boolean
+    }
+
+    class EventBus {
+        <<singleton>>
+        -listeners: Map
+        +on(event, handler) void
+        +emit(event, payload) void
     }
 
     class User {
-        +id: ObjectId
-        +phone: String
+        +_id: ObjectId
+        +username: String
+        +password: String
         +email: String
-        +phoneVerified: Boolean
         +emailVerified: Boolean
-        +role: String
-        +save() User
-        +deactivate() Boolean
+        +role: UserRole
+        +isActive: Boolean
+        +isBanned: Boolean
+        +refreshToken: String
+        +createdAt: Date
+        +updatedAt: Date
+        +toJSON() Object
     }
 
     class Profile {
-        +id: ObjectId
+        +_id: ObjectId
         +userId: ObjectId
         +displayName: String
         +bio: String
-        +niche: String
+        +avatar: String
+        +coverImage: String
+        +niche: String[]
+        +interests: String[]
+        +contentTypes: String[]
+        +collaborationPreferences: Object
+        +contactInfo: Object
         +location: GeoPoint
-        +updateFields(data) Profile
-        +linkSocial(account) Profile
-        +getCompleteness() Number
+        +isVerified: Boolean
+        +verifiedAt: Date
+        +followerCount: Number
+        +profileCompleteness: Number
     }
 
-    class VerificationRequest {
+    class CollaborationRequest {
+        +_id: ObjectId
         +userId: ObjectId
-        +status: VerificationStatus
-        +evidence: String
-        +reviewedBy: String
-        +reviewedAt: Date
+        +brandId: ObjectId
+        +title: String
+        +description: String
+        +budget: Number
+        +deadline: Date
+        +status: RequestStatus
+        +createdAt: Date
+        +updatedAt: Date
+    }
+
+    class Conversation {
+        +_id: ObjectId
+        +participants: ObjectId[]
+        +collaborationRequestId: ObjectId
+        +lastMessageAt: Date
+    }
+
+    class Message {
+        +_id: ObjectId
+        +conversationId: ObjectId
+        +senderId: ObjectId
+        +content: String
+        +readAt: Date
+        +createdAt: Date
     }
 
     class UserRole {
@@ -91,79 +191,36 @@ classDiagram
         ADMIN
     }
 
-    class CollaborationRequest {
-        +id: ObjectId
-        +senderId: ObjectId
-        +receiverId: ObjectId
-        +status: RequestStatus
-        +description: String
-        +budget: Number
-        +location: GeoPoint
-        +respond(decision) CollaborationRequest
-    }
-
-    class Conversation {
-        +id: ObjectId
-        +participants: ObjectId[]
-        +lastMessageAt: Date
-        +addMessage(message) Message
-    }
-
-    class Message {
-        +id: ObjectId
-        +senderId: ObjectId
-        +content: String
-        +type: MessageType
-        +createdAt: Date
-    }
-
-    class MediaPost {
-        +type: String
-        +url: String
-        +caption: String
-        +tags: String[]
-    }
-
-    class SocialAccount {
-        +platform: String
-        +handle: String
-        +verified: Boolean
-        +linkedAt: Date
-    }
-
-    class VerificationStatus {
-        <<enumeration>>
-        PENDING
-        APPROVED
-        REJECTED
-    }
-
     class RequestStatus {
         <<enumeration>>
+        OPEN
         PENDING
         ACCEPTED
-        REJECTED
+        DECLINED
         CLOSED
     }
 
-    class MessageType {
-        <<enumeration>>
-        TEXT
-        MEDIA
-    }
-
-    UserController --> UserService
-    UserController --> AuthService
-    CollaborationRequestController --> CollaborationService
+    AuthController --> AuthService
+    AuthController --> TokenService
+    AuthService --> TokenService
+    AuthService --> EventBus : emits USER_REGISTERED, EMAIL_VERIFIED
+    ProfileController --> ProfileService
     ProfileService --> Profile
-    VerificationService --> VerificationRequest
+    SearchController --> SearchService
+    SearchService --> Profile
+    GeocodeController --> GeocodeService
+    CollaborationController --> CollaborationService
     CollaborationService --> CollaborationRequest
-    ConversationService --> Conversation
+    CollaborationService --> EventBus : emits COLLAB_ACCEPTED
+    MessagingController --> MessagingService
+    MessagingService --> Conversation
+    MessagingService --> EventBus : subscribes COLLAB_ACCEPTED
     Conversation "1" --> "*" Message
     User "1" --> "1" Profile
     User --> UserRole
-    Profile "1" --> "*" MediaPost
-    Profile "1" --> "*" SocialAccount
-    VerificationRequest --> VerificationStatus
     CollaborationRequest --> RequestStatus
-    Message --> MessageType
+    BaseRepository <|-- ProfileRepository
+    BaseRepository <|-- CollaborationRepository
+    BaseRepository <|-- MessagingRepository
+    BaseRepository <|-- UserRepository
+    BaseRepository <|-- SearchRepository
