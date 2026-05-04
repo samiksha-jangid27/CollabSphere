@@ -68,8 +68,7 @@ Before you start, make sure you have:
 
 You do **NOT** need:
 
-- Any SMS/OTP provider account (OTP is printed to your terminal in dev)
-- Gmail or SMTP credentials (email uses Ethereal fake SMTP in dev)
+- Any SMS/OTP provider account 
 - Docker (tests use in-memory MongoDB)
 
 ---
@@ -134,12 +133,10 @@ Open http://localhost:3000 in your browser.
 
 ### Login flow
 
-1. Enter any phone number (e.g. `9876543210`) and click **Send OTP**
-2. Look at your **terminal** — the OTP is printed there:
-   ```
-   [info]: [DEV] OTP for +919876543210: 847291
-   ```
-3. Enter the 6-digit code and click **Verify** — you're redirected to the dashboard
+1. Choose the Account Type
+2. Enter you newly created Username
+3. Add you email address to the Sign-Up page
+4. Enter a 8-digit or longer password and click **Verify** — you're redirected to the dashboard
 
 ### Email verification
 
