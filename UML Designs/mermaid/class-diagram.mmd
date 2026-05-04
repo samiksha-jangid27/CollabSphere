@@ -1,226 +1,142 @@
+%% Class Diagram — backend models, repos, services, controllers, and frontend contexts/hooks (logical)
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#0b5cff","edgeLabelBackground":"#ffffff","fontFamily":"Inter, Arial"}}}%%
 classDiagram
-    class AuthController {
-        +register(req, res) Object
-        +login(req, res) Object
-        +sendEmailVerification(req, res) Object
-        +verifyEmail(req, res) Object
-        +refresh(req, res) Object
-        +logout(req, res) Object
-        +me(req, res) Object
-    }
+%% Styling classes
+classDef backend fill:#eaf2ff,stroke:#0b5cff,color:#02285b;
+classDef model fill:#fff7e6,stroke:#ff9844,color:#663f00;
+classDef repo fill:#f0f7f0,stroke:#2e8b57,color:#0b5a3a;
+classDef service fill:#eef7ff,stroke:#2f6fb2,color:#0b3a66;
+classDef controller fill:#f7f7fb,stroke:#9aa7ff,color:#1b2a7a;
+classDef util fill:#f5f5f5,stroke:#c0c0c0,color:#333;
 
-    class AuthService {
-        -userRepo: UserRepository
-        -tokenService: TokenService
-        -emailProvider: EmailProvider
-        +register(data) Object
-        +login(username, password) Object
-        +sendEmailVerification(userId) void
-        +verifyEmail(token) Object
-        +refreshTokens(refreshToken) Object
-        +logout(userId) void
-    }
+%% Models (Mongoose)
+class User {
+  <<model>>
+  ObjectId _id
+  string username
+  string? email
+  string role
+  bool emailVerified
+  bool isActive
+}
+class Profile {
+  <<model>>
+  ObjectId _id
+  ObjectId userId
+  string displayName
+  string[] niche
+  GeoJSON location
+  number profileCompleteness
+}
+class CollaborationRequest {
+  <<model>>
+  ObjectId _id
+  ObjectId userId
+  ObjectId brandId
+  string title
+  string description
+  number budget
+  Date deadline
+  string status
+}
+class Conversation {
+  <<model>>
+  ObjectId _id
+  ObjectId[] participants
+  ObjectId collaborationRequestId
+}
+class Message {
+  <<model>>
+  ObjectId _id
+  ObjectId conversationId
+  ObjectId senderId
+  string content
+  Date? readAt
+}
 
-    class TokenService {
-        +generateAccessToken(payload) String
-        +generateRefreshToken(payload) String
-        +generateEmailToken(payload) String
-        +verifyAccessToken(token) Payload
-        +verifyRefreshToken(token) Payload
-        +verifyEmailToken(token) Payload
-    }
+%% Repositories
+class BaseRepository {
+  +create()
+  +findById()
+  +find()
+  +update()
+}
+class UserRepository
+class ProfileRepository
+class CollaborationRepository
+class ConversationRepository
+class MessageRepository
 
-    class ProfileController {
-        +createProfile(req, res) Object
-        +getMyProfile(req, res) Object
-        +updateMyProfile(req, res) Object
-        +deleteMyProfile(req, res) Object
-        +uploadAvatar(req, res) Object
-        +uploadCover(req, res) Object
-        +getProfileById(req, res) Object
-    }
+%% Services and utilities
+class AuthService
+class TokenService
+class ProfileService
+class CollaborationService
+class MessagingService
+class SearchService
+class GeocodeService
+class EventBus
+class ResponseHelper
 
-    class ProfileService {
-        -profileRepo: ProfileRepository
-        +createProfile(userId, data) Profile
-        +getMyProfile(userId) Profile
-        +updateProfile(userId, data) Profile
-        +deleteProfile(userId) Boolean
-        +uploadAvatar(userId, file) Profile
-        +uploadCover(userId, file) Profile
-        +getProfileById(id) Profile
-        +calculateCompleteness(profile) Number
-    }
+%% Controllers
+class AuthController
+class ProfileController
+class CollaborationController
+class MessagingController
+class SearchController
+class GeocodeController
 
-    class SearchController {
-        +searchProfiles(req, res) Object
-        +searchCities(req, res) Object
-    }
+%% Frontend contexts/hooks (logical classes)
+class AuthContext
+class SocketContext
+class useProfile
+class useMessaging
 
-    class SearchService {
-        -searchRepo: SearchRepository
-        +searchProfiles(filters) List
-        +searchCities(query) List
-    }
+%% Visual grouping via notes
+note left of BaseRepository
+BaseRepository<T> used by feature repositories
+end note
 
-    class GeocodeController {
-        +search(req, res) Object
-    }
+%% Inheritance & relationships
+BaseRepository <|-- UserRepository : extends
+BaseRepository <|-- ProfileRepository : extends
+BaseRepository <|-- CollaborationRepository : extends
+BaseRepository <|-- ConversationRepository : extends
+BaseRepository <|-- MessageRepository : extends
 
-    class GeocodeService {
-        +search(query) List
-    }
+UserRepository --> User : uses
+ProfileRepository --> Profile : uses
+CollaborationRepository --> CollaborationRequest : uses
+ConversationRepository --> Conversation : uses
+MessageRepository --> Message : uses
 
-    class CollaborationController {
-        +createRequest(req, res) Object
-        +getInbox(req, res) Object
-        +getSent(req, res) Object
-        +acceptRequest(req, res) Object
-        +declineRequest(req, res) Object
-    }
+AuthService --> UserRepository : depends on
+AuthController --> AuthService : uses
 
-    class CollaborationService {
-        -collabRepo: CollaborationRepository
-        +createRequest(brandId, data) CollaborationRequest
-        +getInbox(userId, filters) Page
-        +getSent(brandId, filters) Page
-        +acceptRequest(requestId, userId) CollaborationRequest
-        +declineRequest(requestId, userId) CollaborationRequest
-    }
+ProfileService --> ProfileRepository : depends on
+ProfileController --> ProfileService : uses
 
-    class MessagingController {
-        +listConversations(req, res) Object
-        +getMessages(req, res) Object
-        +sendMessage(req, res) Object
-    }
+CollaborationService --> CollaborationRepository : depends on
+CollaborationController --> CollaborationService : uses
+CollaborationService --> EventBus : emits events
 
-    class MessagingService {
-        -messagingRepo: MessagingRepository
-        +listConversations(userId) List
-        +getMessages(conversationId, userId) List
-        +sendMessage(conversationId, senderId, content) Message
-        +ensureConversation(participants, collabId) Conversation
-        +subscribeToEvents(service) void
-    }
+MessagingService --> ConversationRepository : depends on
+MessagingService --> MessageRepository : depends on
+MessagingService --> EventBus : listens for COLLAB_ACCEPTED to create Conversation
 
-    class BaseRepository~T~ {
-        <<abstract>>
-        #model: Model~T~
-        +findById(id) T
-        +findOne(filter) T
-        +find(filter) List
-        +create(data) T
-        +updateById(id, data) T
-        +deleteById(id) Boolean
-    }
+SearchService --> ProfileRepository : depends on
+GeocodeService --> external(Nominatim) : depends on
 
-    class EventBus {
-        <<singleton>>
-        -listeners: Map
-        +on(event, handler) void
-        +emit(event, payload) void
-    }
+TokenService --> AuthService : issues/validates tokens
+ResponseHelper ..> Controllers : used to normalize responses
 
-    class User {
-        +_id: ObjectId
-        +username: String
-        +password: String
-        +email: String
-        +emailVerified: Boolean
-        +role: UserRole
-        +isActive: Boolean
-        +isBanned: Boolean
-        +refreshToken: String
-        +createdAt: Date
-        +updatedAt: Date
-        +toJSON() Object
-    }
+AuthContext --> AuthService : frontend wrapper (calls APIs)
+SocketContext --> MessagingService : open socket connection and forward events
 
-    class Profile {
-        +_id: ObjectId
-        +userId: ObjectId
-        +displayName: String
-        +bio: String
-        +avatar: String
-        +coverImage: String
-        +niche: String[]
-        +interests: String[]
-        +contentTypes: String[]
-        +collaborationPreferences: Object
-        +contactInfo: Object
-        +location: GeoPoint
-        +isVerified: Boolean
-        +verifiedAt: Date
-        +followerCount: Number
-        +profileCompleteness: Number
-    }
-
-    class CollaborationRequest {
-        +_id: ObjectId
-        +userId: ObjectId
-        +brandId: ObjectId
-        +title: String
-        +description: String
-        +budget: Number
-        +deadline: Date
-        +status: RequestStatus
-        +createdAt: Date
-        +updatedAt: Date
-    }
-
-    class Conversation {
-        +_id: ObjectId
-        +participants: ObjectId[]
-        +collaborationRequestId: ObjectId
-        +lastMessageAt: Date
-    }
-
-    class Message {
-        +_id: ObjectId
-        +conversationId: ObjectId
-        +senderId: ObjectId
-        +content: String
-        +readAt: Date
-        +createdAt: Date
-    }
-
-    class UserRole {
-        <<enumeration>>
-        CREATOR
-        BRAND
-        ADMIN
-    }
-
-    class RequestStatus {
-        <<enumeration>>
-        OPEN
-        PENDING
-        ACCEPTED
-        DECLINED
-        CLOSED
-    }
-
-    AuthController --> AuthService
-    AuthController --> TokenService
-    AuthService --> TokenService
-    AuthService --> EventBus : emits USER_REGISTERED, EMAIL_VERIFIED
-    ProfileController --> ProfileService
-    ProfileService --> Profile
-    SearchController --> SearchService
-    SearchService --> Profile
-    GeocodeController --> GeocodeService
-    CollaborationController --> CollaborationService
-    CollaborationService --> CollaborationRequest
-    CollaborationService --> EventBus : emits COLLAB_ACCEPTED
-    MessagingController --> MessagingService
-    MessagingService --> Conversation
-    MessagingService --> EventBus : subscribes COLLAB_ACCEPTED
-    Conversation "1" --> "*" Message
-    User "1" --> "1" Profile
-    User --> UserRole
-    CollaborationRequest --> RequestStatus
-    BaseRepository <|-- ProfileRepository
-    BaseRepository <|-- CollaborationRepository
-    BaseRepository <|-- MessagingRepository
-    BaseRepository <|-- UserRepository
-    BaseRepository <|-- SearchRepository
+%% Class styling
+class User,Profile,CollaborationRequest,Conversation,Message model
+class BaseRepository,UserRepository,ProfileRepository,CollaborationRepository,ConversationRepository,MessageRepository repo
+class AuthService,ProfileService,CollaborationService,MessagingService,TokenService,SearchService,GeocodeService service
+class AuthController,ProfileController,CollaborationController,MessagingController,SearchController,GeocodeController controller
+class EventBus,ResponseHelper util
+class AuthContext,SocketContext,useProfile,useMessaging backend

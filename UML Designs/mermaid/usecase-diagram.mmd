@@ -1,82 +1,44 @@
-flowchart LR
-    Creator([Creator / Influencer])
-    Brand([Brand])
+%% Use Case Diagram — derived from code (no OTP/phone cases)
+%%{init: {"themeVariables":{"primaryColor":"#0b5cff","secondaryColor":"#7aa2ff","actorFill":"#e6f0ff","dbFill":"#fff3e6","serviceFill":"#eaf7ea","utilFill":"#f0f0f0","fontFamily":"Inter, Arial"}}}%%
+usecaseDiagram
+actor Brand as B <<actor>>
+actor Creator as C <<actor>>
+actor Admin as A <<actor>>
 
-    subgraph System[CollabSphere System]
-        direction TB
+%% Use cases
+(B) --> (Register / Login)
+(C) --> (Register / Login)
+(B) --> (Verify Email)
+(C) --> (Verify Email)
 
-        subgraph Onboarding[Onboarding & Profile]
-            UC1((Register with Username and Password))
-            UC2((Login))
-            UC3((Verify Email))
-            UC4((Create Profile))
-            UC5((Edit Profile))
-            UC6((Upload Avatar and Cover))
-        end
+(B) --> (Create Collaboration Request)
+(B) --> (View Sent Requests)
+(C) --> (View Inbox)
+(C) --> (Accept Collaboration)
+(C) --> (Decline Collaboration)
 
-        subgraph Discovery[Discovery & Search]
-            UC7((Search Profiles by City, Niche, Platform))
-            UC8((Autocomplete Cities))
-            UC9((Geocode Address via Nominatim))
-            UC10((View Creator Profile))
-        end
+(B) --> (Search Profiles)
+(C) --> (Search Profiles)
+(B) --> (View Profile)
+(C) --> (View Profile)
+(C) --> (Create/Update Profile)
+(B) --> (Create/Update Profile)
 
-        subgraph Interaction[Interaction & Collaboration]
-            UC11((Send Collaboration Request))
-            UC12((View Inbox of Requests))
-            UC13((View Sent Requests))
-            UC14((Accept Request))
-            UC15((Decline Request))
-        end
+(B) --> (Upload Avatar/Cover)
+(C) --> (Upload Avatar/Cover)
 
-        subgraph Messaging[Messaging]
-            UC16((List Conversations))
-            UC17((Send Message))
-            UC18((Read Messages))
-        end
+(C) --> (Open Conversation / Send Message)
+(B) --> (Open Conversation / Send Message)
+(C) --> (Mark Messages Read)
+(B) --> (Mark Messages Read)
 
-        subgraph Internal[System Services - Internal]
-            UC19((Send Email Verification Link))
-            UC20((Issue and Refresh JWT Tokens))
-            UC21((Auto-create Conversation on Accept))
-            UC22((Deliver Real-Time Messages via Socket.io))
-            UC23((Upload Media to Cloudinary))
-        end
-    end
+%% System actor for real-time
+actor "System (Socket)" as S <<actor>>
+S --> (Real-time message delivery)
+S --> (Join conversation room)
 
-    Creator --- UC1
-    Creator --- UC2
-    Creator --- UC3
-    Creator --- UC4
-    Creator --- UC5
-    Creator --- UC6
-    Creator --- UC10
-    Creator --- UC12
-    Creator --- UC14
-    Creator --- UC15
-    Creator --- UC16
-    Creator --- UC17
-    Creator --- UC18
-
-    Brand --- UC1
-    Brand --- UC2
-    Brand --- UC3
-    Brand --- UC4
-    Brand --- UC5
-    Brand --- UC6
-    Brand --- UC7
-    Brand --- UC8
-    Brand --- UC9
-    Brand --- UC10
-    Brand --- UC11
-    Brand --- UC13
-    Brand --- UC16
-    Brand --- UC17
-    Brand --- UC18
-
-    UC3 -. include .-> UC19
-    UC1 -. include .-> UC20
-    UC2 -. include .-> UC20
-    UC14 -. include .-> UC21
-    UC17 -. include .-> UC22
-    UC6 -. include .-> UC23
+%% Notes (derived)
+note right of (Register / Login)
+Only username/password + email verification implemented in code.
+OTP/phone endpoints present in docs but NOT implemented.
+end note

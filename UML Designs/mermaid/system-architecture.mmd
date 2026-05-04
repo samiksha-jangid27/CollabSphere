@@ -1,0 +1,60 @@
+%% System Architecture Diagram — frontend, backend, realtime, DB, and external integrations
+%%{init: {"themeVariables":{"clusterBkg":"#f7fbff","frontend":"#e6f0ff","backend":"#eef7ef","service":"#fff7e6","db":"#fff3e6","external":"#f0f7ff","util":"#f5f5f5"}}}%%
+graph LR
+  subgraph Frontend [Frontend (Next.js)]
+    direction TB
+    FE_pages["Pages & UI\n(client/src/app/*)"]:::frontend
+    FE_ctx["AuthContext\nSocketContext"]:::frontend
+    FE_hooks["useAuth\nuseProfile\nuseMessaging\nuseSearch"]:::frontend
+    FE_pages --> FE_ctx
+    FE_ctx --> FE_hooks
+  end
+
+  subgraph Backend [Backend (Express + TS)]
+    direction TB
+    API["REST API\nserver/src/index.ts\nroutes /api/v1/*"]:::backend
+    MW["Middleware\nauthenticate, validate, rateLimiter, upload"]:::util
+    Controllers["Controllers\n(server/src/modules/*/*.controller.ts)"]:::backend
+    Services["Services\nAuth, Profile, Collaboration,\nMessaging, Search, Geocode"]:::service
+    Repos["Repositories\nextend BaseRepository"]:::repo
+    Models["Mongoose Models\nUser, Profile, CollaborationRequest,\nConversation, Message"]:::model
+    EventBus["EventBus"]:::util
+    API --> MW
+    MW --> Controllers
+    Controllers --> Services
+    Services --> Repos
+    Repos --> Models
+    Services --> EventBus
+    EventBus --> Services
+  end
+
+  subgraph RealTime [Real-time]
+    SocketIO["Socket.io\n(server/src/config/socket.ts)"]:::service
+    SocketIO <-- FE_ctx
+    SocketIO --> Messaging["MessagingService (push events)"]
+    Messaging --> EventBus
+  end
+
+  subgraph Data ["Database & Storage"]
+    MongoDB["MongoDB (Atlas)\nMongoose models"]:::db
+    Cloudinary["Cloudinary (media)"]:::external
+    Nominatim["Nominatim (geocode)"]:::external
+    SMTP["Nodemailer / SMTP"]:::external
+  end
+
+  FE_pages -->|HTTP / Axios (access token)| API
+  API --> MongoDB
+  Services --> Cloudinary
+  GeocodeService --> Nominatim
+  AuthService --> SMTP
+  SocketIO --> MongoDB
+  Messaging --> SocketIO
+
+  classDef frontend fill:#e6f0ff,stroke:#0b5cff,color:#062b66;
+  classDef backend fill:#eef7ef,stroke:#2e8b57,color:#09321b;
+  classDef service fill:#fff7e6,stroke:#ff9844,color:#663f00;
+  classDef util fill:#f5f5f5,stroke:#bdbdbd,color:#333;
+  classDef repo fill:#f0fff4,stroke:#2f9a5f,color:#06482a;
+  classDef model fill:#fff3e6,stroke:#ffb86b,color:#4b2f00;
+  classDef db fill:#fff3e6,stroke:#ffb86b,color:#4b2f00;
+  classDef external fill:#f0f7ff,stroke:#8aaaf7,color:#08316f;

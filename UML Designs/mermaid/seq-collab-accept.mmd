@@ -1,0 +1,39 @@
+%% Sequence Diagram — collaboration accept -> conversation creation (code-verified)
+%%{init: {"themeVariables":{"actorBorder":"#0b5cff","actorBg":"#e6f0ff","sequenceNumberColor":"#444"}}}%%
+sequenceDiagram
+    autonumber
+    participant FE as Frontend
+    participant API as "API / PATCH /api/v1/collaborations/:id/accept"
+    participant AuthM as "authenticate middleware"
+    participant CollC as "CollaborationController.accept"
+    participant CollS as "CollaborationService.accept"
+    participant CollR as "CollaborationRepository"
+    participant EventBus as "EventBus"
+    participant MsgS as "MessagingService (subscriber)"
+    participant ConvR as "ConversationRepository"
+    participant DB as "MongoDB"
+
+    FE->>API: PATCH /collaborations/:id/accept (auth header)
+    API->>AuthM: validate JWT, attach req.user
+    AuthM-->>API: req.user (role=creator)
+    API->>CollC: accept(req.params.id, req.user)
+    CollC->>CollS: accept(collabId, userId)
+    CollS->>CollR: findById(collabId)
+    CollR->>DB: query CollaborationRequest by _id
+    DB-->>CollR: collaboration document
+    CollS->>CollR: update(status='Accepted', updatedAt)
+    CollR->>DB: update collaboration status
+    DB-->>CollR: updated doc
+    CollS->>EventBus: emit("COLLAB_ACCEPTED", {collabId, brandId, creatorId})
+    CollS-->>CollC: return {conversationId?} (after event processed)
+    CollC-->>API: res 200 { success:true, data:{conversationId} }
+
+    %% EventBus subscriber runs asynchronously but shown here
+    EventBus->>MsgS: publish COLLAB_ACCEPTED
+    MsgS->>ConvR: findOne({collaborationRequestId}) OR create conversation
+    ConvR->>DB: query or insert Conversation
+    DB-->>ConvR: conversation doc
+    MsgS->>ConvR: set unique collaborationRequestId
+    MsgS->>DB: update conversation.lastMessage if any
+    MsgS-->>EventBus: publish "CONVERSATION_CREATED" (optional)
+    EventBus-->>API: (optional notification)
