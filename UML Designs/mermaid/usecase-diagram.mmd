@@ -1,9 +1,9 @@
 %% Use Case Diagram — derived from code (no OTP/phone cases)
-%%{init: {"themeVariables":{"primaryColor":"#0b5cff","secondaryColor":"#7aa2ff","actorFill":"#e6f0ff","dbFill":"#fff3e6","serviceFill":"#eaf7ea","utilFill":"#f0f0f0","fontFamily":"Inter, Arial"}}}%%
+%%{init: {"themeVariables":{"primaryColor":"#4CAF50","secondaryColor":"#2196F3","tertiaryColor":"#FFC107","noteBkgColor":"#F5F5F5","noteBorderColor":"#9E9E9E","fontFamily":"Inter, Arial"}}}%%
 usecaseDiagram
-actor Brand as B <<actor>>
-actor Creator as C <<actor>>
-actor Admin as A <<actor>>
+actor Brand as B
+actor Creator as C
+actor Admin as A
 
 %% Use cases
 (B) --> (Register / Login)
@@ -33,12 +33,7 @@ actor Admin as A <<actor>>
 (B) --> (Mark Messages Read)
 
 %% System actor for real-time
-actor "System (Socket)" as S <<actor>>
+actor "System (Socket)" as S
 S --> (Real-time message delivery)
 S --> (Join conversation room)
 
-%% Notes (derived)
-note right of (Register / Login)
-Only username/password + email verification implemented in code.
-OTP/phone endpoints present in docs but NOT implemented.
-end note

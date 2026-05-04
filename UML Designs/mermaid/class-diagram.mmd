@@ -1,13 +1,13 @@
 %% Class Diagram — backend models, repos, services, controllers, and frontend contexts/hooks (logical)
-%%{init: {"theme":"base","themeVariables":{"primaryColor":"#0b5cff","edgeLabelBackground":"#ffffff","fontFamily":"Inter, Arial"}}}%%
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#4CAF50","secondaryColor":"#2196F3","tertiaryColor":"#FFC107","fontFamily":"Inter, Arial","edgeLabelBackground":"#ffffff"}}}%%
 classDiagram
 %% Styling classes
-classDef backend fill:#eaf2ff,stroke:#0b5cff,color:#02285b;
-classDef model fill:#fff7e6,stroke:#ff9844,color:#663f00;
-classDef repo fill:#f0f7f0,stroke:#2e8b57,color:#0b5a3a;
-classDef service fill:#eef7ff,stroke:#2f6fb2,color:#0b3a66;
-classDef controller fill:#f7f7fb,stroke:#9aa7ff,color:#1b2a7a;
-classDef util fill:#f5f5f5,stroke:#c0c0c0,color:#333;
+classDef model fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20;
+classDef repo fill:#E3F2FD,stroke:#2196F3,color:#0D47A1;
+classDef service fill:#E3F2FD,stroke:#2196F3,color:#0D47A1;
+classDef controller fill:#FFF8E1,stroke:#FFC107,color:#7A5A00;
+classDef util fill:#F5F5F5,stroke:#9E9E9E,color:#424242;
+classDef frontend fill:#F1F8E9,stroke:#4CAF50,color:#1B5E20;
 
 %% Models (Mongoose)
 class User {
@@ -89,13 +89,11 @@ class GeocodeController
 %% Frontend contexts/hooks (logical classes)
 class AuthContext
 class SocketContext
-class useProfile
-class useMessaging
+class UseProfileHook
+class UseMessagingHook
 
 %% Visual grouping via notes
-note left of BaseRepository
-BaseRepository<T> used by feature repositories
-end note
+note for BaseRepository "Generic CRUD base for feature repositories"
 
 %% Inheritance & relationships
 BaseRepository <|-- UserRepository : extends
@@ -125,10 +123,14 @@ MessagingService --> MessageRepository : depends on
 MessagingService --> EventBus : listens for COLLAB_ACCEPTED to create Conversation
 
 SearchService --> ProfileRepository : depends on
-GeocodeService --> external(Nominatim) : depends on
 
 TokenService --> AuthService : issues/validates tokens
-ResponseHelper ..> Controllers : used to normalize responses
+ResponseHelper ..> AuthController : used to normalize responses
+ResponseHelper ..> ProfileController : used to normalize responses
+ResponseHelper ..> CollaborationController : used to normalize responses
+ResponseHelper ..> MessagingController : used to normalize responses
+ResponseHelper ..> SearchController : used to normalize responses
+ResponseHelper ..> GeocodeController : used to normalize responses
 
 AuthContext --> AuthService : frontend wrapper (calls APIs)
 SocketContext --> MessagingService : open socket connection and forward events
@@ -139,4 +141,4 @@ class BaseRepository,UserRepository,ProfileRepository,CollaborationRepository,Co
 class AuthService,ProfileService,CollaborationService,MessagingService,TokenService,SearchService,GeocodeService service
 class AuthController,ProfileController,CollaborationController,MessagingController,SearchController,GeocodeController controller
 class EventBus,ResponseHelper util
-class AuthContext,SocketContext,useProfile,useMessaging backend
+class AuthContext,SocketContext,UseProfileHook,UseMessagingHook frontend

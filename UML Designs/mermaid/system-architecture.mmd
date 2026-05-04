@@ -1,5 +1,5 @@
 %% System Architecture Diagram — frontend, backend, realtime, DB, and external integrations
-%%{init: {"themeVariables":{"clusterBkg":"#f7fbff","frontend":"#e6f0ff","backend":"#eef7ef","service":"#fff7e6","db":"#fff3e6","external":"#f0f7ff","util":"#f5f5f5"}}}%%
+%%{init: {"themeVariables":{"clusterBkg":"#FAFAFA","fontFamily":"Inter, Arial"}}}%%
 graph LR
   subgraph Frontend [Frontend (Next.js)]
     direction TB
@@ -19,6 +19,8 @@ graph LR
     Repos["Repositories\nextend BaseRepository"]:::repo
     Models["Mongoose Models\nUser, Profile, CollaborationRequest,\nConversation, Message"]:::model
     EventBus["EventBus"]:::util
+    AuthSvc["AuthService"]:::service
+    GeoSvc["GeocodeService"]:::service
     API --> MW
     MW --> Controllers
     Controllers --> Services
@@ -26,6 +28,8 @@ graph LR
     Repos --> Models
     Services --> EventBus
     EventBus --> Services
+    Services --> AuthSvc
+    Services --> GeoSvc
   end
 
   subgraph RealTime [Real-time]
@@ -45,16 +49,16 @@ graph LR
   FE_pages -->|HTTP / Axios (access token)| API
   API --> MongoDB
   Services --> Cloudinary
-  GeocodeService --> Nominatim
-  AuthService --> SMTP
+  GeoSvc --> Nominatim
+  AuthSvc --> SMTP
   SocketIO --> MongoDB
   Messaging --> SocketIO
 
-  classDef frontend fill:#e6f0ff,stroke:#0b5cff,color:#062b66;
-  classDef backend fill:#eef7ef,stroke:#2e8b57,color:#09321b;
-  classDef service fill:#fff7e6,stroke:#ff9844,color:#663f00;
-  classDef util fill:#f5f5f5,stroke:#bdbdbd,color:#333;
-  classDef repo fill:#f0fff4,stroke:#2f9a5f,color:#06482a;
-  classDef model fill:#fff3e6,stroke:#ffb86b,color:#4b2f00;
-  classDef db fill:#fff3e6,stroke:#ffb86b,color:#4b2f00;
-  classDef external fill:#f0f7ff,stroke:#8aaaf7,color:#08316f;
+  classDef frontend fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20;
+  classDef backend fill:#E3F2FD,stroke:#2196F3,color:#0D47A1;
+  classDef service fill:#E3F2FD,stroke:#2196F3,color:#0D47A1;
+  classDef util fill:#F5F5F5,stroke:#9E9E9E,color:#424242;
+  classDef repo fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20;
+  classDef model fill:#FFF8E1,stroke:#FFC107,color:#7A5A00;
+  classDef db fill:#FFF8E1,stroke:#FFC107,color:#7A5A00;
+  classDef external fill:#FFEBEE,stroke:#F44336,color:#B71C1C;
