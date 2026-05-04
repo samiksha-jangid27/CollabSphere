@@ -1,56 +1,66 @@
-%% ER Diagram — derived strictly from server/src/models/*.ts
-%%{init: {"themeVariables":{"erPrimaryColor":"#4CAF50","erSecondaryColor":"#E3F2FD","erTextColor":"#1B1B1B","fontFamily":"Inter, Arial"}}}%%
 erDiagram
-    %% Entities and fields from server/src/models/*.ts
-
+    USER ||--|| PROFILE : has
     USER {
-      ObjectId _id PK
-      string username
-      string email
-      string role
-      bool emailVerified
-      bool isActive
+        ObjectId _id
+        string username
+        string password
+        string email
+        boolean emailVerified
+        string role
+        boolean isActive
+        boolean isBanned
+        string refreshToken
+        date createdAt
+        date updatedAt
     }
-
     PROFILE {
-      ObjectId _id PK
-      ObjectId userId FK
-      string displayName
-      string[] niche
-      GeoJSON location
-      number profileCompleteness
+        ObjectId _id
+        ObjectId userId
+        string displayName
+        string bio
+        string avatar
+        string coverImage
+        array niche
+        array interests
+        array contentTypes
+        object collaborationPreferences
+        object contactInfo
+        object location
+        boolean isVerified
+        date verifiedAt
+        number followerCount
+        number profileCompleteness
     }
 
-    COLLABORATIONREQUEST {
-      ObjectId _id PK
-      ObjectId userId FK  "creator"
-      ObjectId brandId FK "brand"
-      string title
-      string description
-      number budget
-      Date deadline
-      string status
+    USER ||--o{ COLLABORATION_REQUEST : sends_as_brand
+    USER ||--o{ COLLABORATION_REQUEST : receives_as_creator
+    COLLABORATION_REQUEST {
+        ObjectId _id
+        ObjectId userId
+        ObjectId brandId
+        string title
+        string description
+        number budget
+        date deadline
+        string status
+        date createdAt
+        date updatedAt
     }
 
+    COLLABORATION_REQUEST ||--o| CONVERSATION : opens_on_accept
+    USER }o--o{ CONVERSATION : participates
+    CONVERSATION ||--o{ MESSAGE : contains
     CONVERSATION {
-      ObjectId _id PK
-      ObjectId[] participants FK(User)
-      ObjectId collaborationRequestId FK(COLLABORATIONREQUEST) UNIQUE
-      string lastMessage
+        ObjectId _id
+        array participants
+        ObjectId collaborationRequestId
+        date lastMessageAt
     }
-
     MESSAGE {
-      ObjectId _id PK
-      ObjectId conversationId FK(CONVERSATION)
-      ObjectId senderId FK(USER)
-      string content
-      Date? readAt
+        ObjectId _id
+        ObjectId conversationId
+        ObjectId senderId
+        string content
+        date readAt
+        date createdAt
     }
-
-    %% Relationships
-    USER ||--o{ PROFILE : "1 to 1 (userId unique)"
-    USER ||--o{ COLLABORATIONREQUEST : "brandId / userId (as participants)"
-    COLLABORATIONREQUEST ||--o{ CONVERSATION : "1-to-1 (conversation.collaborationRequestId unique)"
-    CONVERSATION ||--o{ MESSAGE : "1-to-many"
-    USER ||--o{ MESSAGE : "1-to-many (sender)"
-    CONVERSATION }o--|| USER : "participants (exactly 2)" 
