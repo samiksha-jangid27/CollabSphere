@@ -411,4 +411,7 @@ Detailed documentation lives in `docs/`:
 | Name | GitHub |
 |---|---|
 | Samiksha Jangid | [@samiksha-jangid27](https://github.com/samiksha-jangid27) |
-| *(add remaining team members)* | |
+| Sarvesh Srinath | [@sarveshcore](https://github.com/sarveshcore) |
+| Arina Ali | [@arina-26](https://github.com/arina-26) |
+| Saksham Sharma | [@Saksham-9898](https://github.com/Saksham-9898) |
+| Yachna | []() |
