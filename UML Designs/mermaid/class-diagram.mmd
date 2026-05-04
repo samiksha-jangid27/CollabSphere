@@ -27,7 +27,7 @@ classDef hook fill:#FFF1F2,stroke:#FB7185,color:#7A1F31,stroke-width:1px;
 classDef external fill:#FFFFFF,stroke:#CBD5E1,color:#475569,stroke-dasharray: 6 4,stroke-width:1px;
 
 %% =========================
-%% Core Domain Models
+%% Models
 %% =========================
 class User {
   <<model>>
@@ -86,7 +86,7 @@ class Message {
 }
 
 %% =========================
-%% Shared Utilities
+%% Shared utilities
 %% =========================
 class BaseRepository {
   <<util>>
@@ -129,7 +129,7 @@ class MessageRepository
 class SearchRepository
 
 %% =========================
-%% Backend Services
+%% Services
 %% =========================
 class AuthService {
   <<service>>
@@ -178,7 +178,7 @@ class GeocodeService {
 }
 
 %% =========================
-%% Backend Controllers
+%% Controllers
 %% =========================
 class AuthController {
   <<controller>>
@@ -220,7 +220,7 @@ class GeocodeController {
 }
 
 %% =========================
-%% Frontend glue layer
+%% Frontend layer
 %% =========================
 class AuthContext {
   <<context>>
@@ -337,7 +337,7 @@ BaseRepository <|-- MessageRepository
 BaseRepository <|-- SearchRepository
 
 %% =========================
-%% Repository -> Model
+%% Repository to model
 %% =========================
 AuthRepository --> User : persists
 ProfileRepository --> Profile : persists
@@ -347,7 +347,7 @@ MessageRepository --> Message : persists
 SearchRepository --> Profile : queries
 
 %% =========================
-%% Controller -> Service
+%% Controller to service
 %% =========================
 AuthController --> AuthService : uses
 ProfileController --> ProfileService : uses
@@ -357,7 +357,7 @@ SearchController --> SearchService : uses
 GeocodeController --> GeocodeService : uses
 
 %% =========================
-%% Service -> Repository / Utility
+%% Service dependencies
 %% =========================
 AuthService --> AuthRepository : depends on
 AuthService --> TokenService : issues tokens
@@ -376,7 +376,7 @@ CollaborationService --> MongoDB : stores requests
 
 MessagingService --> ConversationRepository : depends on
 MessagingService --> MessageRepository : depends on
-MessagingService --> EventBus : listens for collaboration acceptance
+MessagingService --> EventBus : listens for collaboration events
 MessagingService --> SocketIO : realtime delivery
 MessagingService --> MongoDB : stores chat data
 
@@ -387,7 +387,7 @@ SearchService --> MongoDB : reads profiles
 GeocodeService --> Nominatim : external API
 
 %% =========================
-%% Shared utilities
+%% Shared helpers
 %% =========================
 ResponseHelper ..> AuthController : formats responses
 ResponseHelper ..> ProfileController : formats responses
@@ -396,8 +396,8 @@ ResponseHelper ..> MessagingController : formats responses
 ResponseHelper ..> SearchController : formats responses
 ResponseHelper ..> GeocodeController : formats responses
 
-EventBus ..> MessagingService : pub/sub
 EventBus ..> CollaborationService : pub/sub
+EventBus ..> MessagingService : pub/sub
 
 %% =========================
 %% Frontend relationships
@@ -417,7 +417,7 @@ ApiClient <|-- CollaborationApiService
 ApiClient <|-- MessagingApiService
 
 %% =========================
-%% Class coloring
+%% Class colors
 %% =========================
 class User,Profile,CollaborationRequest,Conversation,Message model
 class BaseRepository,ResponseHelper,EventBus,TokenService,ApiClient util
