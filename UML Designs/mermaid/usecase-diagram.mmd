@@ -1,39 +1,55 @@
-%% Use Case Diagram — derived from code (no OTP/phone cases)
-%%{init: {"themeVariables":{"primaryColor":"#4CAF50","secondaryColor":"#2196F3","tertiaryColor":"#FFC107","noteBkgColor":"#F5F5F5","noteBorderColor":"#9E9E9E","fontFamily":"Inter, Arial"}}}%%
-usecaseDiagram
-actor Brand as B
-actor Creator as C
-actor Admin as A
+%% Use Case Diagram — rendered as flowchart for GitHub-safe Mermaid support
+%%{init: {"themeVariables":{"primaryColor":"#4CAF50","secondaryColor":"#2196F3","tertiaryColor":"#FFC107","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+	classDef actor fill:#E3F2FD,stroke:#2196F3,color:#0D47A1
+	classDef usecase fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20
+	classDef system fill:#FFF8E1,stroke:#FFC107,color:#7A5A00
 
-%% Use cases
-(B) --> (Register / Login)
-(C) --> (Register / Login)
-(B) --> (Verify Email)
-(C) --> (Verify Email)
+	Brand([Brand]):::actor
+	Creator([Creator]):::actor
+	Admin([Admin]):::actor
+	Socket([System / Socket]):::system
 
-(B) --> (Create Collaboration Request)
-(B) --> (View Sent Requests)
-(C) --> (View Inbox)
-(C) --> (Accept Collaboration)
-(C) --> (Decline Collaboration)
+	subgraph UC[Use Cases]
+		direction TB
+		UC1([Register / Login]):::usecase
+		UC2([Verify Email]):::usecase
+		UC3([Create Collaboration Request]):::usecase
+		UC4([View Sent Requests]):::usecase
+		UC5([View Inbox]):::usecase
+		UC6([Accept Collaboration]):::usecase
+		UC7([Decline Collaboration]):::usecase
+		UC8([Search Profiles]):::usecase
+		UC9([View Profile]):::usecase
+		UC10([Create / Update Profile]):::usecase
+		UC11([Upload Avatar / Cover]):::usecase
+		UC12([Open Conversation / Send Message]):::usecase
+		UC13([Mark Messages Read]):::usecase
+		UC14([Real-time Message Delivery]):::usecase
+		UC15([Join Conversation Room]):::usecase
+	end
 
-(B) --> (Search Profiles)
-(C) --> (Search Profiles)
-(B) --> (View Profile)
-(C) --> (View Profile)
-(C) --> (Create/Update Profile)
-(B) --> (Create/Update Profile)
-
-(B) --> (Upload Avatar/Cover)
-(C) --> (Upload Avatar/Cover)
-
-(C) --> (Open Conversation / Send Message)
-(B) --> (Open Conversation / Send Message)
-(C) --> (Mark Messages Read)
-(B) --> (Mark Messages Read)
-
-%% System actor for real-time
-actor "System (Socket)" as S
-S --> (Real-time message delivery)
-S --> (Join conversation room)
+	Brand --> UC1
+	Creator --> UC1
+	Brand --> UC2
+	Creator --> UC2
+	Brand --> UC3
+	Brand --> UC4
+	Creator --> UC5
+	Creator --> UC6
+	Creator --> UC7
+	Brand --> UC8
+	Creator --> UC8
+	Brand --> UC9
+	Creator --> UC9
+	Brand --> UC10
+	Creator --> UC10
+	Brand --> UC11
+	Creator --> UC11
+	Brand --> UC12
+	Creator --> UC12
+	Brand --> UC13
+	Creator --> UC13
+	Socket --> UC14
+	Socket --> UC15
 

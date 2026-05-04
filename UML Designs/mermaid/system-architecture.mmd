@@ -35,7 +35,7 @@ graph LR
   subgraph RealTime [Real-time]
     SocketIO["Socket.io\n(server/src/config/socket.ts)"]:::service
     SocketIO <-- FE_ctx
-    SocketIO --> Messaging["MessagingService (push events)"]
+    SocketIO --> Messaging["MessagingService (push events)"]:::service
     Messaging --> EventBus
   end
 

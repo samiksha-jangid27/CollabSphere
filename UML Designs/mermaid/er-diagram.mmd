@@ -6,7 +6,7 @@ erDiagram
     USER {
       ObjectId _id PK
       string username
-      string? email
+      string email
       string role
       bool emailVerified
       bool isActive
@@ -36,7 +36,7 @@ erDiagram
       ObjectId _id PK
       ObjectId[] participants FK(User)
       ObjectId collaborationRequestId FK(COLLABORATIONREQUEST) UNIQUE
-      object lastMessage
+      string lastMessage
     }
 
     MESSAGE {
