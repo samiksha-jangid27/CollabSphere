@@ -1,142 +1,430 @@
-%% Class Diagram — backend models, repos, services, controllers, and frontend contexts/hooks (logical)
-%%{init: {"theme":"base","themeVariables":{"primaryColor":"#0b5cff","edgeLabelBackground":"#ffffff","fontFamily":"Inter, Arial"}}}%%
-classDiagram
-%% Styling classes
-classDef backend fill:#eaf2ff,stroke:#0b5cff,color:#02285b;
-classDef model fill:#fff7e6,stroke:#ff9844,color:#663f00;
-classDef repo fill:#f0f7f0,stroke:#2e8b57,color:#0b5a3a;
-classDef service fill:#eef7ff,stroke:#2f6fb2,color:#0b3a66;
-classDef controller fill:#f7f7fb,stroke:#9aa7ff,color:#1b2a7a;
-classDef util fill:#f5f5f5,stroke:#c0c0c0,color:#333;
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Inter, Arial, sans-serif",
+    "primaryColor": "#F7FAFF",
+    "primaryTextColor": "#10233D",
+    "primaryBorderColor": "#2E6BF6",
+    "lineColor": "#6B7A90",
+    "tertiaryColor": "#FFFFFF",
+    "edgeLabelBackground": "#FFFFFF"
+  }
+}}%%
 
-%% Models (Mongoose)
+classDiagram
+direction LR
+
+%% =========================
+%% Styling
+%% =========================
+classDef model fill:#FFF6E8,stroke:#F59E0B,color:#5C3B00,stroke-width:1px;
+classDef repo fill:#EEFDF4,stroke:#22A06B,color:#0E4B2F,stroke-width:1px;
+classDef service fill:#EEF4FF,stroke:#4F7DFF,color:#123A8A,stroke-width:1px;
+classDef controller fill:#F8F7FF,stroke:#8B7BFF,color:#2A237A,stroke-width:1px;
+classDef util fill:#F4F6F8,stroke:#94A3B8,color:#334155,stroke-width:1px;
+classDef context fill:#F0FDFF,stroke:#06B6D4,color:#0E4B55,stroke-width:1px;
+classDef hook fill:#FFF1F2,stroke:#FB7185,color:#7A1F31,stroke-width:1px;
+classDef external fill:#FFFFFF,stroke:#CBD5E1,color:#475569,stroke-dasharray: 6 4,stroke-width:1px;
+
+%% =========================
+%% Core Domain Models
+%% =========================
 class User {
   <<model>>
-  ObjectId _id
-  string username
-  string? email
-  string role
-  bool emailVerified
-  bool isActive
-}
-class Profile {
-  <<model>>
-  ObjectId _id
-  ObjectId userId
-  string displayName
-  string[] niche
-  GeoJSON location
-  number profileCompleteness
-}
-class CollaborationRequest {
-  <<model>>
-  ObjectId _id
-  ObjectId userId
-  ObjectId brandId
-  string title
-  string description
-  number budget
-  Date deadline
-  string status
-}
-class Conversation {
-  <<model>>
-  ObjectId _id
-  ObjectId[] participants
-  ObjectId collaborationRequestId
-}
-class Message {
-  <<model>>
-  ObjectId _id
-  ObjectId conversationId
-  ObjectId senderId
-  string content
-  Date? readAt
+  +ObjectId _id
+  +string username
+  +string email
+  +string passwordHash
+  +string role
+  +boolean isEmailVerified
+  +boolean isActive
+  +Date createdAt
 }
 
-%% Repositories
+class Profile {
+  <<model>>
+  +ObjectId _id
+  +ObjectId userId
+  +string displayName
+  +string bio
+  +string niche
+  +string location
+  +string[] socialLinks
+  +number completenessScore
+  +Date createdAt
+}
+
+class CollaborationRequest {
+  <<model>>
+  +ObjectId _id
+  +ObjectId creatorId
+  +ObjectId brandId
+  +string title
+  +string description
+  +number budget
+  +Date deadline
+  +string status
+  +Date createdAt
+}
+
+class Conversation {
+  <<model>>
+  +ObjectId _id
+  +ObjectId collaborationRequestId
+  +ObjectId[] participantIds
+  +Date lastMessageAt
+}
+
+class Message {
+  <<model>>
+  +ObjectId _id
+  +ObjectId conversationId
+  +ObjectId senderId
+  +string content
+  +Date readAt
+  +Date createdAt
+}
+
+%% =========================
+%% Shared Utilities
+%% =========================
 class BaseRepository {
+  <<util>>
   +create()
   +findById()
-  +find()
+  +findAll()
   +update()
+  +delete()
 }
-class UserRepository
+
+class EventBus {
+  <<util>>
+  +emit()
+  +on()
+  +off()
+}
+
+class ResponseHelper {
+  <<util>>
+  +success()
+  +error()
+}
+
+class TokenService {
+  <<service>>
+  +generateAccessToken()
+  +generateRefreshToken()
+  +verifyAccessToken()
+  +verifyRefreshToken()
+}
+
+%% =========================
+%% Repositories
+%% =========================
+class AuthRepository
 class ProfileRepository
 class CollaborationRepository
 class ConversationRepository
 class MessageRepository
+class SearchRepository
 
-%% Services and utilities
-class AuthService
-class TokenService
-class ProfileService
-class CollaborationService
-class MessagingService
-class SearchService
-class GeocodeService
-class EventBus
-class ResponseHelper
+%% =========================
+%% Backend Services
+%% =========================
+class AuthService {
+  <<service>>
+  +register()
+  +login()
+  +refresh()
+  +logout()
+  +verifyEmail()
+}
 
-%% Controllers
-class AuthController
-class ProfileController
-class CollaborationController
-class MessagingController
-class SearchController
-class GeocodeController
+class ProfileService {
+  <<service>>
+  +createProfile()
+  +updateProfile()
+  +getProfile()
+  +uploadAvatar()
+}
 
-%% Frontend contexts/hooks (logical classes)
-class AuthContext
-class SocketContext
-class useProfile
-class useMessaging
+class CollaborationService {
+  <<service>>
+  +createRequest()
+  +acceptRequest()
+  +declineRequest()
+  +getInbox()
+  +getSent()
+}
 
-%% Visual grouping via notes
-note left of BaseRepository
-BaseRepository<T> used by feature repositories
-end note
+class MessagingService {
+  <<service>>
+  +createConversation()
+  +sendMessage()
+  +getMessages()
+  +markRead()
+}
 
-%% Inheritance & relationships
-BaseRepository <|-- UserRepository : extends
-BaseRepository <|-- ProfileRepository : extends
-BaseRepository <|-- CollaborationRepository : extends
-BaseRepository <|-- ConversationRepository : extends
-BaseRepository <|-- MessageRepository : extends
+class SearchService {
+  <<service>>
+  +searchProfiles()
+  +suggestCities()
+}
 
-UserRepository --> User : uses
-ProfileRepository --> Profile : uses
-CollaborationRepository --> CollaborationRequest : uses
-ConversationRepository --> Conversation : uses
-MessageRepository --> Message : uses
+class GeocodeService {
+  <<service>>
+  +resolveLocation()
+  +autocompleteCity()
+}
 
-AuthService --> UserRepository : depends on
+%% =========================
+%% Backend Controllers
+%% =========================
+class AuthController {
+  <<controller>>
+  +register()
+  +login()
+  +refresh()
+  +logout()
+}
+
+class ProfileController {
+  <<controller>>
+  +createProfile()
+  +updateProfile()
+  +uploadAvatar()
+}
+
+class CollaborationController {
+  <<controller>>
+  +createRequest()
+  +acceptRequest()
+  +declineRequest()
+}
+
+class MessagingController {
+  <<controller>>
+  +sendMessage()
+  +getConversation()
+}
+
+class SearchController {
+  <<controller>>
+  +searchProfiles()
+  +suggestCities()
+}
+
+class GeocodeController {
+  <<controller>>
+  +geocode()
+}
+
+%% =========================
+%% Frontend glue layer
+%% =========================
+class AuthContext {
+  <<context>>
+  +user
+  +token
+  +login()
+  +logout()
+  +refreshSession()
+}
+
+class SocketContext {
+  <<context>>
+  +socket
+  +connect()
+  +disconnect()
+}
+
+class UseAuthHook {
+  <<hook>>
+  +useAuth()
+}
+
+class UseProfileHook {
+  <<hook>>
+  +useProfile()
+}
+
+class UseSearchHook {
+  <<hook>>
+  +useSearch()
+}
+
+class UseCollaborationHook {
+  <<hook>>
+  +useCollaboration()
+}
+
+class UseMessagingHook {
+  <<hook>>
+  +useMessaging()
+}
+
+class ApiClient {
+  <<util>>
+  +request()
+  +interceptors()
+}
+
+class AuthApiService {
+  <<util>>
+  +login()
+  +register()
+  +refresh()
+}
+
+class ProfileApiService {
+  <<util>>
+  +getProfile()
+  +updateProfile()
+}
+
+class SearchApiService {
+  <<util>>
+  +searchProfiles()
+}
+
+class CollaborationApiService {
+  <<util>>
+  +createRequest()
+  +acceptRequest()
+}
+
+class MessagingApiService {
+  <<util>>
+  +sendMessage()
+  +getMessages()
+}
+
+%% =========================
+%% External systems
+%% =========================
+class MongoDB {
+  <<external>>
+}
+
+class Cloudinary {
+  <<external>>
+}
+
+class Nominatim {
+  <<external>>
+}
+
+class SocketIO {
+  <<external>>
+}
+
+class JWT {
+  <<external>>
+}
+
+class Nodemailer {
+  <<external>>
+}
+
+%% =========================
+%% Inheritance
+%% =========================
+BaseRepository <|-- AuthRepository
+BaseRepository <|-- ProfileRepository
+BaseRepository <|-- CollaborationRepository
+BaseRepository <|-- ConversationRepository
+BaseRepository <|-- MessageRepository
+BaseRepository <|-- SearchRepository
+
+%% =========================
+%% Repository -> Model
+%% =========================
+AuthRepository --> User : persists
+ProfileRepository --> Profile : persists
+CollaborationRepository --> CollaborationRequest : persists
+ConversationRepository --> Conversation : persists
+MessageRepository --> Message : persists
+SearchRepository --> Profile : queries
+
+%% =========================
+%% Controller -> Service
+%% =========================
 AuthController --> AuthService : uses
+ProfileController --> ProfileService : uses
+CollaborationController --> CollaborationService : uses
+MessagingController --> MessagingService : uses
+SearchController --> SearchService : uses
+GeocodeController --> GeocodeService : uses
+
+%% =========================
+%% Service -> Repository / Utility
+%% =========================
+AuthService --> AuthRepository : depends on
+AuthService --> TokenService : issues tokens
+AuthService --> JWT : signs/verifies
+AuthService --> Nodemailer : sends email
+AuthService --> MongoDB : stores users
 
 ProfileService --> ProfileRepository : depends on
-ProfileController --> ProfileService : uses
+ProfileService --> GeocodeService : location support
+ProfileService --> Cloudinary : uploads media
+ProfileService --> MongoDB : stores profiles
 
 CollaborationService --> CollaborationRepository : depends on
-CollaborationController --> CollaborationService : uses
 CollaborationService --> EventBus : emits events
+CollaborationService --> MongoDB : stores requests
 
 MessagingService --> ConversationRepository : depends on
 MessagingService --> MessageRepository : depends on
-MessagingService --> EventBus : listens for COLLAB_ACCEPTED to create Conversation
+MessagingService --> EventBus : listens for collaboration acceptance
+MessagingService --> SocketIO : realtime delivery
+MessagingService --> MongoDB : stores chat data
 
-SearchService --> ProfileRepository : depends on
-GeocodeService --> external(Nominatim) : depends on
+SearchService --> SearchRepository : depends on
+SearchService --> GeocodeService : location lookup
+SearchService --> MongoDB : reads profiles
 
-TokenService --> AuthService : issues/validates tokens
-ResponseHelper ..> Controllers : used to normalize responses
+GeocodeService --> Nominatim : external API
 
-AuthContext --> AuthService : frontend wrapper (calls APIs)
-SocketContext --> MessagingService : open socket connection and forward events
+%% =========================
+%% Shared utilities
+%% =========================
+ResponseHelper ..> AuthController : formats responses
+ResponseHelper ..> ProfileController : formats responses
+ResponseHelper ..> CollaborationController : formats responses
+ResponseHelper ..> MessagingController : formats responses
+ResponseHelper ..> SearchController : formats responses
+ResponseHelper ..> GeocodeController : formats responses
 
-%% Class styling
+EventBus ..> MessagingService : pub/sub
+EventBus ..> CollaborationService : pub/sub
+
+%% =========================
+%% Frontend relationships
+%% =========================
+AuthContext --> AuthApiService : calls
+SocketContext --> SocketIO : connects to
+UseAuthHook --> AuthContext : consumes
+UseProfileHook --> ProfileApiService : calls
+UseSearchHook --> SearchApiService : calls
+UseCollaborationHook --> CollaborationApiService : calls
+UseMessagingHook --> MessagingApiService : calls
+
+ApiClient <|-- AuthApiService
+ApiClient <|-- ProfileApiService
+ApiClient <|-- SearchApiService
+ApiClient <|-- CollaborationApiService
+ApiClient <|-- MessagingApiService
+
+%% =========================
+%% Class coloring
+%% =========================
 class User,Profile,CollaborationRequest,Conversation,Message model
-class BaseRepository,UserRepository,ProfileRepository,CollaborationRepository,ConversationRepository,MessageRepository repo
-class AuthService,ProfileService,CollaborationService,MessagingService,TokenService,SearchService,GeocodeService service
+class BaseRepository,ResponseHelper,EventBus,TokenService,ApiClient util
+class AuthRepository,ProfileRepository,CollaborationRepository,ConversationRepository,MessageRepository,SearchRepository repo
+class AuthService,ProfileService,CollaborationService,MessagingService,SearchService,GeocodeService service
 class AuthController,ProfileController,CollaborationController,MessagingController,SearchController,GeocodeController controller
-class EventBus,ResponseHelper util
-class AuthContext,SocketContext,useProfile,useMessaging backend
+class AuthContext,SocketContext context
+class UseAuthHook,UseProfileHook,UseSearchHook,UseCollaborationHook,UseMessagingHook hook
+class MongoDB,Cloudinary,Nominatim,SocketIO,JWT,Nodemailer external
+class AuthApiService,ProfileApiService,SearchApiService,CollaborationApiService,MessagingApiService util
