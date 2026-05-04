@@ -1,55 +1,82 @@
-%% Use Case Diagram — rendered as flowchart for GitHub-safe Mermaid support
-%%{init: {"themeVariables":{"primaryColor":"#4CAF50","secondaryColor":"#2196F3","tertiaryColor":"#FFC107","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
-	classDef actor fill:#E3F2FD,stroke:#2196F3,color:#0D47A1
-	classDef usecase fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20
-	classDef system fill:#FFF8E1,stroke:#FFC107,color:#7A5A00
+    Creator([Creator / Influencer])
+    Brand([Brand])
 
-	Brand([Brand]):::actor
-	Creator([Creator]):::actor
-	Admin([Admin]):::actor
-	Socket([System / Socket]):::system
+    subgraph System[CollabSphere System]
+        direction TB
 
-	subgraph UC[Use Cases]
-		direction TB
-		UC1([Register / Login]):::usecase
-		UC2([Verify Email]):::usecase
-		UC3([Create Collaboration Request]):::usecase
-		UC4([View Sent Requests]):::usecase
-		UC5([View Inbox]):::usecase
-		UC6([Accept Collaboration]):::usecase
-		UC7([Decline Collaboration]):::usecase
-		UC8([Search Profiles]):::usecase
-		UC9([View Profile]):::usecase
-		UC10([Create / Update Profile]):::usecase
-		UC11([Upload Avatar / Cover]):::usecase
-		UC12([Open Conversation / Send Message]):::usecase
-		UC13([Mark Messages Read]):::usecase
-		UC14([Real-time Message Delivery]):::usecase
-		UC15([Join Conversation Room]):::usecase
-	end
+        subgraph Onboarding[Onboarding & Profile]
+            UC1((Register with Username and Password))
+            UC2((Login))
+            UC3((Verify Email))
+            UC4((Create Profile))
+            UC5((Edit Profile))
+            UC6((Upload Avatar and Cover))
+        end
 
-	Brand --> UC1
-	Creator --> UC1
-	Brand --> UC2
-	Creator --> UC2
-	Brand --> UC3
-	Brand --> UC4
-	Creator --> UC5
-	Creator --> UC6
-	Creator --> UC7
-	Brand --> UC8
-	Creator --> UC8
-	Brand --> UC9
-	Creator --> UC9
-	Brand --> UC10
-	Creator --> UC10
-	Brand --> UC11
-	Creator --> UC11
-	Brand --> UC12
-	Creator --> UC12
-	Brand --> UC13
-	Creator --> UC13
-	Socket --> UC14
-	Socket --> UC15
+        subgraph Discovery[Discovery & Search]
+            UC7((Search Profiles by City, Niche, Platform))
+            UC8((Autocomplete Cities))
+            UC9((Geocode Address via Nominatim))
+            UC10((View Creator Profile))
+        end
 
+        subgraph Interaction[Interaction & Collaboration]
+            UC11((Send Collaboration Request))
+            UC12((View Inbox of Requests))
+            UC13((View Sent Requests))
+            UC14((Accept Request))
+            UC15((Decline Request))
+        end
+
+        subgraph Messaging[Messaging]
+            UC16((List Conversations))
+            UC17((Send Message))
+            UC18((Read Messages))
+        end
+
+        subgraph Internal[System Services - Internal]
+            UC19((Send Email Verification Link))
+            UC20((Issue and Refresh JWT Tokens))
+            UC21((Auto-create Conversation on Accept))
+            UC22((Deliver Real-Time Messages via Socket.io))
+            UC23((Upload Media to Cloudinary))
+        end
+    end
+
+    Creator --- UC1
+    Creator --- UC2
+    Creator --- UC3
+    Creator --- UC4
+    Creator --- UC5
+    Creator --- UC6
+    Creator --- UC10
+    Creator --- UC12
+    Creator --- UC14
+    Creator --- UC15
+    Creator --- UC16
+    Creator --- UC17
+    Creator --- UC18
+
+    Brand --- UC1
+    Brand --- UC2
+    Brand --- UC3
+    Brand --- UC4
+    Brand --- UC5
+    Brand --- UC6
+    Brand --- UC7
+    Brand --- UC8
+    Brand --- UC9
+    Brand --- UC10
+    Brand --- UC11
+    Brand --- UC13
+    Brand --- UC16
+    Brand --- UC17
+    Brand --- UC18
+
+    UC3 -. include .-> UC19
+    UC1 -. include .-> UC20
+    UC2 -. include .-> UC20
+    UC14 -. include .-> UC21
+    UC17 -. include .-> UC22
+    UC6 -. include .-> UC23
