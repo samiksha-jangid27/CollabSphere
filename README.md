@@ -414,4 +414,4 @@ Detailed documentation lives in `docs/`:
 | Sarvesh Srinath | [@sarveshcore](https://github.com/sarveshcore) |
 | Arina Ali | [@arina-26](https://github.com/arina-26) |
 | Saksham Sharma | [@Saksham-9898](https://github.com/Saksham-9898) |
-| Yachna | []() |
+| Yachna | [@yachna297](https://github.com/yachna297) |
